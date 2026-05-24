@@ -1372,6 +1372,7 @@ button { font-family: inherit; }
    ========================================================================= */
 
 /* Планшет / небольшой экран */
+/* Планшет */
 @media (max-width: 1024px) {
   .grid-4 { grid-template-columns: 1fr 1fr; }
   .grid-3 { grid-template-columns: 1fr 1fr; }
@@ -1380,9 +1381,12 @@ button { font-family: inherit; }
   .scanner-stage { grid-template-columns: 1fr; }
 }
 
-/* Мобильный */
+/* ═══════════════════════════════════════════
+   МОБИЛЬНЫЙ (≤768px)
+   ═══════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Скрываем сайдбар, показываем нижнюю навигацию */
+
+  /* Сайдбар — скрыть, показать нижнюю навигацию */
   .sidebar { display: none !important; }
   .app { grid-template-columns: 1fr !important; }
   .main { min-width: 0; }
@@ -1400,13 +1404,16 @@ button { font-family: inherit; }
     align-items: center;
     padding: 0 4px;
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .mobile-nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 3px;
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-radius: 8px;
     border: none;
     background: transparent;
@@ -1416,14 +1423,15 @@ button { font-family: inherit; }
     cursor: pointer;
     transition: color .15s, background .15s;
     min-width: 52px;
+    min-height: 48px;
+    position: relative;
   }
   .mobile-nav-item.active {
     color: var(--accent);
-    background: var(--bg-hover);
   }
   .mobile-nav-item .badge {
     position: absolute;
-    top: 4px; right: 8px;
+    top: 2px; right: 6px;
     background: var(--accent);
     color: #fff;
     font-size: 9px;
@@ -1434,78 +1442,172 @@ button { font-family: inherit; }
     line-height: 14px;
   }
 
-  /* Скролл с отступом для нижней навигации */
-  .scroller { padding-bottom: 72px !important; }
+  /* Скролл */
+  .scroller {
+    padding: 12px 14px calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
 
-  /* Топбар мобильный */
-  .topbar { padding: 10px 14px !important; }
+  /* Топбар */
+  .topbar {
+    height: 52px !important;
+    padding: 0 12px !important;
+  }
   .topbar .crumbs { display: none; }
-  .topbar-title { display: block !important; font-size: 15px; font-weight: 600; }
-  .topbar-actions { gap: 6px !important; }
-  .topbar-actions .btn span:not(.icon) { display: none; } /* скрываем текст кнопок */
+  .topbar-title {
+    display: block !important;
+    font-size: 16px !important;
+    font-weight: 600;
+    color: var(--fg-0);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-actions { gap: 4px !important; }
+  .topbar-actions .btn { padding: 0 10px !important; }
 
   /* Страница */
-  .page-head { padding: 14px 14px 0 !important; flex-direction: column !important; gap: 10px !important; align-items: flex-start !important; }
-  .page-head .row { width: 100%; justify-content: flex-start !important; flex-wrap: wrap; }
+  .page-head {
+    padding: 12px 0 10px !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+  }
+  .page-title { font-size: 20px !important; }
+  .page-sub { font-size: 12px !important; }
+  .page-head .row {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .page-head .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 100px;
+    max-width: 180px;
+  }
 
   /* Гриды */
   .grid-4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-  .grid-3 { grid-template-columns: 1fr !important; }
-  .grid-2 { grid-template-columns: 1fr !important; }
+  .grid-3 { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .grid-2 { grid-template-columns: 1fr !important; gap: 10px !important; }
 
-  /* Таблицы — горизонтальный скролл */
-  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .tbl { min-width: 500px; }
-  .tbl th, .tbl td { padding: 8px 10px !important; font-size: 12px !important; }
+  /* KPI */
+  .kpi { padding: 12px !important; }
+  .kpi-value { font-size: 22px !important; }
+  .kpi-label { font-size: 10px !important; }
+  .kpi-meta { font-size: 10px !important; }
+
+  /* Кнопки — крупные тач-таргеты */
+  .btn {
+    height: 40px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    min-height: 40px;
+  }
+  .btn.small { height: 32px !important; min-height: 32px; }
+  .icon-btn { width: 36px !important; height: 36px !important; }
+
+  /* Инпуты — font-size 16px предотвращает зум на iOS */
+  .input, .select, textarea {
+    height: 44px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+  }
+  textarea { height: auto !important; min-height: 80px; }
+
+  /* Таблицы */
+  .tbl-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+    margin: 0 -2px;
+  }
+  .tbl { min-width: 480px; }
+  .tbl th { font-size: 10px !important; padding: 8px 10px !important; }
+  .tbl td { font-size: 12px !important; padding: 10px 10px !important; }
+  .tbl .hide-mobile { display: none !important; }
+  .row-hover { cursor: pointer; }
 
   /* Карточки */
-  .card { border-radius: 10px !important; }
-  .card-head { padding: 12px 14px !important; }
+  .card { border-radius: 12px !important; }
+  .subhead { margin: 14px 0 6px !important; }
+
+  /* Табло — задания */
+  .task-row { padding: 10px 12px !important; gap: 8px !important; }
+  .task-row .qty-bar { display: none; }
+  .task-name { font-size: 13px !important; }
+  .task-meta { font-size: 11px !important; }
+  .board-group { padding: 12px !important; }
+  .board-grp-header { gap: 6px !important; }
 
   /* Библиотека */
   .lib-grid { grid-template-columns: 1fr !important; }
-  .lib-list { max-height: 240px; overflow-y: auto; }
+  .lib-list { max-height: 200px; overflow-y: auto; }
 
-  /* Билдер заказа */
+  /* Конструктор заказа */
   .builder { grid-template-columns: 1fr !important; }
-  .builder .stack { gap: 10px; }
 
   /* Сканер */
-  .scanner-stage { grid-template-columns: 1fr !important; flex-direction: column; }
-  .phone-frame { margin: 0 auto; max-width: 340px; }
+  .scanner-stage { grid-template-columns: 1fr !important; }
+  .phone-frame { max-width: 100% !important; margin: 0 !important; }
 
-  /* KPI карточки */
-  .kpi { padding: 12px 14px !important; }
-  .kpi-value { font-size: 22px !important; }
-
-  /* Модальные окна */
-  .modal {
-    width: calc(100vw - 24px) !important;
-    max-height: 92vh !important;
-    margin: 0 12px;
-    border-radius: 14px 14px 0 0 !important;
+  /* Модальные окна — bottom sheet */
+  .modal-back {
+    align-items: flex-end !important;
+    padding: 0 !important;
   }
-  .modal-back { align-items: flex-end !important; }
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 93svh !important;
+    margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 16px) !important;
+  }
 
-  /* История */
-  .history-filters { flex-direction: column !important; gap: 8px !important; }
+  /* Drag handle для модалок */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--line-1);
+    border-radius: 2px;
+    margin: 10px auto 0;
+  }
 
   /* Маршрутный лист */
   .routesheet { padding: 12px !important; }
-  .rs-header { flex-direction: column !important; gap: 8px; }
+  .rs-head { flex-direction: column !important; gap: 8px; }
 
-  /* Общий padding */
-  .scroller > *:first-child { padding: 0 !important; }
-  .page-body { padding: 0 14px !important; }
+  /* OrderPicker — открывается снизу */
+  .order-picker-dropdown {
+    position: fixed !important;
+    left: 0 !important; right: 0 !important;
+    bottom: 60px !important;
+    top: auto !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 70svh;
+    overflow-y: auto;
+  }
 
-  /* Убираем лишние колонки в таблицах на мобильном */
-  .tbl .hide-mobile { display: none !important; }
+  /* Скрыть лишнее */
+  .tweaks { display: none !important; }
 }
 
-/* Очень маленький экран (iPhone SE и т.п.) */
+/* ═══════════════════════════════════════════
+   МАЛЕНЬКИЙ ЭКРАН (iPhone SE ≤390px)
+   ═══════════════════════════════════════════ */
 @media (max-width: 390px) {
-  .grid-4 { grid-template-columns: 1fr !important; }
+  .grid-4 { grid-template-columns: 1fr 1fr !important; }
   .kpi-value { font-size: 18px !important; }
+  .btn { height: 40px !important; }
+  .mobile-nav-item { min-width: 44px; font-size: 9px; }
+  .page-title { font-size: 18px !important; }
+  .scroller { padding-left: 10px !important; padding-right: 10px !important; }
 }
 
 /* Мобильная навигация скрыта на десктопе */

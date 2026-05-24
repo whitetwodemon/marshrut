@@ -2,7 +2,11 @@
 <html lang="ru" data-theme="dark" data-density="compact">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#14110b" />
   <title>Маршрут — система производственных маршрутных листов</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -10,13 +14,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
+/* Touch оптимизации */
+* { -webkit-tap-highlight-color: transparent; }
+body { overscroll-behavior: none; }
+input, select, textarea { touch-action: manipulation; }
+.btn, .icon-btn, .mobile-nav-item, button { touch-action: manipulation; }
+html { height: -webkit-fill-available; }
+body { min-height: -webkit-fill-available; }
+
 /* =========================================================================
    Маршрут / Дизайн-система
    ========================================================================= */
 
 :root {
   /* Type */
-  --ui-font: "Golos Text", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ui-font: "Inter Tight", "Inter", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --mono-font: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* ---- Light (default workshop) ---- */
@@ -1263,48 +1275,10 @@ button { font-family: inherit; }
    Print
    ========================================================================= */
 @media print {
-  /* Сбрасываем всё лишнее */
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-
-  /* Скрываем весь интерфейс */
-  .sidebar, .topbar, .tweaks, .mobile-nav,
-  .page-head, .scroller > *:not(.print-area),
-  .btn, .icon-btn, .toast-stack { display: none !important; }
-
-  /* Показываем только область печати */
-  .app, .main, .scroller { display: block !important; overflow: visible !important; }
-  .scroller { padding: 0 !important; }
-
-  /* Маршрутный лист */
-  .print-area { display: block !important; }
-  .routesheet {
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 12mm 15mm !important;
-    margin: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-    background: #fff !important;
-    color: #000 !important;
-    font-size: 10pt !important;
-  }
-
-  /* Разрывы страниц */
-  .rs-page-break { page-break-after: always; break-after: page; }
-  .rs-detail-head { page-break-inside: avoid; break-inside: avoid; }
-  tr { page-break-inside: avoid; break-inside: avoid; }
-
-  /* Таблица операций */
-  .rs-ops { width: 100% !important; }
-  .rs-ops td, .rs-ops th { padding: 5px 6px !important; font-size: 9pt !important; }
-
-  @page {
-    size: A4 portrait;
-    margin: 0;
-  }
+  body, .app { background: #fff; }
+  .sidebar, .topbar, .tweaks, .btn, .scan-log, .scanner-stage > div:not(.routesheet) { display: none !important; }
+  .scroller { padding: 0; overflow: visible; }
+  .routesheet { box-shadow: none; border: 0; padding: 0; }
 }
 
 /* =========================================================================
@@ -1416,6 +1390,270 @@ button { font-family: inherit; }
   color: var(--fg-2);
   margin: 18px 0 6px;
 }
+
+/* =========================================================================
+   Адаптивный дизайн — мобильные устройства
+   ========================================================================= */
+
+/* Планшет / небольшой экран */
+/* Планшет */
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .builder { grid-template-columns: 1fr; }
+  .lib-grid { grid-template-columns: 1fr; }
+  .scanner-stage { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   МОБИЛЬНЫЙ (≤768px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Сайдбар — скрыть, показать нижнюю навигацию */
+  .sidebar { display: none !important; }
+  .app { grid-template-columns: 1fr !important; }
+  .main { min-width: 0; }
+
+  /* Нижняя навигация */
+  .mobile-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--bg-1);
+    border-top: 1px solid var(--line-2);
+    z-index: 100;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--fg-2);
+    font-size: 10px;
+    font-family: var(--ui-font);
+    cursor: pointer;
+    transition: color .15s, background .15s;
+    min-width: 52px;
+    min-height: 48px;
+    position: relative;
+  }
+  .mobile-nav-item.active {
+    color: var(--accent);
+  }
+  .mobile-nav-item .badge {
+    position: absolute;
+    top: 2px; right: 6px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    border-radius: 99px;
+    padding: 0 4px;
+    min-width: 14px;
+    text-align: center;
+    line-height: 14px;
+  }
+
+  /* Скролл */
+  .scroller {
+    padding: 12px 14px calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Топбар */
+  .topbar {
+    height: 52px !important;
+    padding: 0 12px !important;
+  }
+  .topbar .crumbs { display: none; }
+  .topbar-title {
+    display: block !important;
+    font-size: 16px !important;
+    font-weight: 600;
+    color: var(--fg-0);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-actions { gap: 4px !important; }
+  .topbar-actions .btn { padding: 0 10px !important; }
+
+  /* Страница */
+  .page-head {
+    padding: 12px 0 10px !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+  }
+  .page-title { font-size: 20px !important; }
+  .page-sub { font-size: 12px !important; }
+  .page-head .row {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .page-head .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 100px;
+    max-width: 180px;
+  }
+
+  /* Гриды */
+  .grid-4 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .grid-3 { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .grid-2 { grid-template-columns: 1fr !important; gap: 10px !important; }
+
+  /* KPI */
+  .kpi { padding: 12px !important; }
+  .kpi-value { font-size: 22px !important; }
+  .kpi-label { font-size: 10px !important; }
+  .kpi-meta { font-size: 10px !important; }
+
+  /* Кнопки — крупные тач-таргеты */
+  .btn {
+    height: 40px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    min-height: 40px;
+  }
+  .btn.small { height: 32px !important; min-height: 32px; }
+  .icon-btn { width: 36px !important; height: 36px !important; }
+
+  /* Инпуты — font-size 16px предотвращает зум на iOS */
+  .input, .select, textarea {
+    height: 44px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+  }
+  textarea { height: auto !important; min-height: 80px; }
+
+  /* Таблицы */
+  .tbl-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+    margin: 0 -2px;
+  }
+  .tbl { min-width: 480px; }
+  .tbl th { font-size: 10px !important; padding: 8px 10px !important; }
+  .tbl td { font-size: 12px !important; padding: 10px 10px !important; }
+  .tbl .hide-mobile { display: none !important; }
+  .row-hover { cursor: pointer; }
+
+  /* Карточки */
+  .card { border-radius: 12px !important; }
+  .subhead { margin: 14px 0 6px !important; }
+
+  /* Табло — задания */
+  .task-row { padding: 10px 12px !important; gap: 8px !important; }
+  .task-row .qty-bar { display: none; }
+  .task-name { font-size: 13px !important; }
+  .task-meta { font-size: 11px !important; }
+  .board-group { padding: 12px !important; }
+  .board-grp-header { gap: 6px !important; }
+
+  /* Библиотека */
+  .lib-grid { grid-template-columns: 1fr !important; }
+  .lib-list { max-height: 200px; overflow-y: auto; }
+
+  /* Конструктор заказа */
+  .builder { grid-template-columns: 1fr !important; }
+
+  /* Сканер */
+  .scanner-stage { grid-template-columns: 1fr !important; }
+  .phone-frame { max-width: 100% !important; margin: 0 !important; }
+
+  /* Модальные окна — bottom sheet */
+  .modal-back {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 93svh !important;
+    margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 16px) !important;
+  }
+
+  /* Drag handle для модалок */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--line-1);
+    border-radius: 2px;
+    margin: 10px auto 0;
+  }
+
+  /* Маршрутный лист */
+  .routesheet { padding: 12px !important; }
+  .rs-head { flex-direction: column !important; gap: 8px; }
+
+  /* OrderPicker — открывается снизу */
+  .order-picker-dropdown {
+    position: fixed !important;
+    left: 0 !important; right: 0 !important;
+    bottom: 60px !important;
+    top: auto !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 70svh;
+    overflow-y: auto;
+  }
+
+  /* Скрыть лишнее */
+  .tweaks { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════
+   МАЛЕНЬКИЙ ЭКРАН (iPhone SE ≤390px)
+   ═══════════════════════════════════════════ */
+@media (max-width: 390px) {
+  .grid-4 { grid-template-columns: 1fr 1fr !important; }
+  .kpi-value { font-size: 18px !important; }
+  .btn { height: 40px !important; }
+  .mobile-nav-item { min-width: 44px; font-size: 9px; }
+  .page-title { font-size: 18px !important; }
+  .scroller { padding-left: 10px !important; padding-right: 10px !important; }
+}
+
+/* Мобильная навигация скрыта на десктопе */
+.mobile-nav { display: none; }
+
+/* Новые статусы операций */
+:root {
+  --st-paused-bg:   #fef3c7; --st-paused-fg:   #92400e; --st-paused-line:  #d97706;
+  --st-reject-bg:   #fee2e2; --st-reject-fg:   #991b1b; --st-reject-line:  #dc2626;
+  --st-rework-bg:   #ede9fe; --st-rework-fg:   #5b21b6; --st-rework-line:  #7c3aed;
+}
+[data-theme="dark"] {
+  --st-paused-bg:   rgba(217,119,6,.18); --st-paused-fg:  #fcd34d; --st-paused-line: rgba(217,119,6,.5);
+  --st-reject-bg:   rgba(220,38,38,.18); --st-reject-fg:  #fca5a5; --st-reject-line: rgba(220,38,38,.5);
+  --st-rework-bg:   rgba(124,58,237,.18);--st-rework-fg:  #c4b5fd; --st-rework-line: rgba(124,58,237,.5);
+}
+.pill.paused  { background: var(--st-paused-bg); color: var(--st-paused-fg); }
+.pill.rejected{ background: var(--st-reject-bg); color: var(--st-reject-fg); }
+.pill.rework  { background: var(--st-rework-bg); color: var(--st-rework-fg); }
+.task-row.paused   { opacity: 0.75; }
+.task-row.rejected { opacity: 0.75; border-left: 2px solid var(--st-reject-line); }
+.task-row.rework   { opacity: 0.85; border-left: 2px solid var(--st-rework-line); }
 
   </style>
 
@@ -2852,7 +3090,7 @@ function OrderPicker({ orders, activeId, onSelect, onNew, lang }) {
 
       {/* Dropdown */}
       {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 6px)', left:0, right:0, maxWidth:600,
+        <div className="order-picker-dropdown" style={{ position:'absolute', top:'calc(100% + 6px)', left:0, right:0, maxWidth:600,
           background:'var(--bg-1)', border:'1px solid var(--line-1)', borderRadius:12,
           boxShadow:'0 8px 32px rgba(0,0,0,.18)', zIndex:200, overflow:'hidden' }}>
 
@@ -4275,7 +4513,7 @@ function ReportView({ data, tasks, scanLog, lang }) {
       </div>
 
       {/* Таблица заказов */}
-      <div className="tbl-wrap" style={{ marginBottom:24 }}>
+      <div className="tbl-wrap" style={{ marginBottom:24, WebkitOverflowScrolling:"touch" }}>
         <table className="tbl">
           <thead>
             <tr>
@@ -4949,8 +5187,8 @@ function LoginScreen({ onLogin }) {
   }
 
   return (
-    <div style={{ minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg-0)',fontFamily:'var(--ui-font)' }}>
-      <div style={{ width:360 }}>
+    <div style={{ minHeight:'100svh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--bg-0)',fontFamily:'var(--ui-font)',padding:'16px' }}>
+      <div style={{ width:'100%', maxWidth:400, padding:'0 16px' }}>
         <div style={{ textAlign:'center',marginBottom:32 }}>
           <div style={{ fontSize:22,fontWeight:700,color:'var(--fg-0)',letterSpacing:'-0.5px' }}>МАРШРУТ</div>
           <div style={{ fontSize:12,color:'var(--fg-2)',marginTop:4 }}>Производственная система</div>
