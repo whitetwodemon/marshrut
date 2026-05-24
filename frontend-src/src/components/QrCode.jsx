@@ -1,62 +1,46 @@
 import React from 'react'
 import qrcode from 'qrcode-generator'
 
-// qr.jsx — QR generation (uses qrcode-generator from CDN, exposed as window.qrcode)
-
-function generateQrSvg(text, size, quietZone = 2) {
-  if (!window.qrcode) return null;
+// Generate QR as SVG string (for print HTML injection)
+export function generateQrSvg(text, sizePx) {
   try {
-    const qr = window.qrcode(0, 'M');
-    qr.addData(text);
+    const qr = qrcode(0, 'M');
+    qr.addData(String(text || ''));
     qr.make();
     const count = qr.getModuleCount();
-    const total = count + quietZone * 2;
-    const cellSize = size / total;
-    const cells = [];
-    for (let r = 0; r < count; r++) {
-      for (let c = 0; c < count; c++) {
-        if (qr.isDark(r, c)) {
-          cells.push({
-            x: (c + quietZone) * cellSize,
-            y: (r + quietZone) * cellSize,
-            w: cellSize,
-            h: cellSize,
-          });
-        }
-      }
-    }
-    return { size, cells, total, cellSize };
+    const cell  = Math.floor(sizePx / (count + 4)); // 4 = 2*quietZone
+    const svg   = qr.createSvgTag(cell, 2);
+    // Override size to exactly sizePx
+    return svg
+      .replace(/width="[^"]*"/, `width="${sizePx}px"`)
+      .replace(/height="[^"]*"/, `height="${sizePx}px"`)
+      .replace(/viewBox="[^"]*"/, `viewBox="0 0 ${sizePx} ${sizePx}"`);
   } catch (e) {
+    console.error('QR generation failed:', e, 'text:', text);
     return null;
   }
 }
 
-const QrCode = React.memo(function QrCode({ text, size = 90, className, style }) {
-  const data = React.useMemo(() => generateQrSvg(text, size), [text, size]);
-  if (!data) {
+// React component for on-screen display
+export const QrCode = React.memo(function QrCode({ text, size = 90, className, style }) {
+  const svgString = React.useMemo(() => generateQrSvg(text, size), [text, size]);
+
+  if (!svgString) {
     return (
-      <div style={{ width: size, height: size, border: '1px solid #ccc', display: 'grid', placeItems: 'center', fontSize: 9, color: '#999', ...style }}>
+      <div style={{ width: size, height: size, border: '1px solid #ccc',
+        display: 'grid', placeItems: 'center', fontSize: 9, color: '#999', ...style }}>
         QR…
       </div>
     );
   }
+
   return (
-    <svg
+    <div
       className={'qr-svg ' + (className || '')}
-      width={size} height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      style={style}
-      shapeRendering="crispEdges"
-    >
-      <rect className="bg" x="0" y="0" width={size} height={size} />
-      {data.cells.map((c, i) => (
-        <rect className="cell" key={i} x={c.x} y={c.y} width={c.w} height={c.h} />
-      ))}
-    </svg>
+      style={{ width: size, height: size, ...style }}
+      dangerouslySetInnerHTML={{ __html: svgString }}
+    />
   );
 });
 
-window.QrCode = QrCode;
-window.generateQrSvg = generateQrSvg;
-
-export { generateQrSvg, QrCode }
+export default QrCode;

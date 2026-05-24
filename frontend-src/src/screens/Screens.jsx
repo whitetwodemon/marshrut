@@ -1,7 +1,7 @@
 import React from 'react'
 import { api, Auth, API_BASE } from '../lib/api.js'
 import { Icon } from '../components/Icon.jsx'
-import { QrCode } from '../components/QrCode.jsx'
+import { QrCode, generateQrSvg } from '../components/QrCode.jsx'
 import { useStrings, StatusPill, OrderPicker, ORDER_STATUS_RU,
          STATUS_LABEL_RU } from '../lib/data.jsx'
 
@@ -599,13 +599,8 @@ function RouteSheetView({ data, tasks, lang, qrSize, onClose, onScanQR }) {
     const rowsHTML = items.map((it, idx) => {
       if (!it.det) return '';
       const opsRows = it.tasks.map(t => {
-        const qrData = window.generateQrSvg ? window.generateQrSvg(t.qrText, 48) : null;
-        const qrSVG = qrData
-          ? `<svg width="48" height="48" viewBox="0 0 48 48" shape-rendering="crispEdges" style="display:block">
-              <rect width="48" height="48" fill="#fff"/>
-              ${qrData.cells.map(c => `<rect x="${c.x.toFixed(1)}" y="${c.y.toFixed(1)}" width="${c.w.toFixed(1)}" height="${c.h.toFixed(1)}" fill="#000"/>`).join('')}
-             </svg>`
-          : `<div style="width:48px;height:48px;border:1px solid #ccc;font-size:6pt;color:#999;display:flex;align-items:center;justify-content:center">${t.qrText.slice(-8)}</div>`;
+        const qrSVG = generateQrSvg(t.qrText, 52) ||
+          `<div style="width:52px;height:52px;border:1px solid #ccc;font-size:6pt;color:#999;display:flex;align-items:center;justify-content:center;text-align:center">${t.qrText.slice(-8)}</div>`;
 
         const rowBg = t.status === 'done' ? '#f0faf0' : t.status === 'in_progress' ? '#fff8f0' : '#fff';
         const statusIcon = t.status === 'done' ? '✓' : t.status === 'in_progress' ? '▶' : '';
