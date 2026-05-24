@@ -2412,8 +2412,8 @@ const EN = {
   ],
 };
 
-const STATUS_LABEL_RU = { waiting: 'Ожидает', in_progress: 'В работе', done: 'Выполнена' };
-const STATUS_LABEL_EN = { waiting: 'Waiting', in_progress: 'In progress', done: 'Done' };
+const STATUS_LABEL_RU = { waiting: 'Ожидает', in_progress: 'В работе', done: 'Выполнена', paused: 'Пауза', rejected: 'Брак', rework: 'Переделка' };
+const STATUS_LABEL_EN = { waiting: 'Waiting', in_progress: 'In progress', done: 'Done', paused: 'Paused', rejected: 'Rejected', rework: 'Rework' };
 const ORDER_STATUS_RU = { plan: 'План', in_work: 'В работе', done: 'Выполнен' };
 const ORDER_STATUS_EN = { plan: 'Plan', in_work: 'In progress', done: 'Done' };
 
@@ -2431,7 +2431,7 @@ function buildTasks(orders, details) {
         let status = 'waiting';
         let updatedAt = null;
         let operator = null;
-        const ratio = idx / det.operations.length;
+        const ratio = idx / (det.operations||[]).length;
         if (ratio < 0.3) {
           completed = item.quantity;
           status = 'done';
@@ -3138,14 +3138,31 @@ function DetailBoardGroup({ detail, tasks, done, total, qty, lang, onCloseTask }
 // =======================================================
 function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail }) {
   const S = useStrings(lang);
-  const [selectedId, setSelectedId] = React.useState(data.details[0].id);
+  const [selectedId, setSelectedId] = React.useState(() => data.details[0]?.id || null);
   const [query, setQuery] = React.useState('');
+
   const filtered = data.details.filter(d =>
     d.name.toLowerCase().includes(query.toLowerCase()) ||
     d.code.toLowerCase().includes(query.toLowerCase())
   );
-  const detail = data.details.find(d => d.id === selectedId);
-  const totalTime = detail.operations.reduce((s, o) => s + o.time, 0);
+
+  // Если выбранная деталь удалена — переключаемся на первую доступную
+  const detail = data.details.find(d => d.id === selectedId) || data.details[0] || null;
+
+  React.useEffect(() => {
+    if (!data.details.find(d => d.id === selectedId) && data.details.length > 0) {
+      setSelectedId(data.details[0].id);
+    }
+  }, [data.details]);
+
+  if (!detail) return (
+    <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>
+      <p style={{ marginBottom:16 }}>Нет деталей в номенклатуре</p>
+      <button className="btn primary" onClick={onNewDetail}><Icon name="plus" size={14}/>Добавить деталь</button>
+    </div>
+  );
+
+  const totalTime = (detail.operations || []).reduce((s, o) => s + o.time, 0);
   const inOrders = tasks.filter(t => t.detailId === detail.id).length > 0 ? 1 : 0;
 
   return (
@@ -3184,9 +3201,9 @@ function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail 
               <div className="code mono">{d.code}</div>
               <div className="name">{d.name}</div>
               <div className="meta">
-                <span><Icon name="cog" size={11} />{d.operations.length} {S.ops}</span>
+                <span><Icon name="cog" size={11} />{(d.operations||[]).length} {S.ops}</span>
                 <span>·</span>
-                <span><Icon name="clock" size={11} />{d.operations.reduce((s, o) => s + o.time, 0)}'</span>
+                <span><Icon name="clock" size={11} />{(d.operations||[]).reduce((s, o) => s + o.time, 0)}'</span>
               </div>
             </div>
           ))}
@@ -3216,7 +3233,7 @@ function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail 
           <div className="lib-stats">
             <div className="lib-stat">
               <div className="lib-stat-label">{S.opsTotal}</div>
-              <div className="lib-stat-value num">{detail.operations.length}</div>
+              <div className="lib-stat-value num">{(detail.operations||[]).length}</div>
             </div>
             <div className="lib-stat">
               <div className="lib-stat-label">{S.estTime}</div>
@@ -3224,7 +3241,7 @@ function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail 
             </div>
             <div className="lib-stat">
               <div className="lib-stat-label">{lang === 'en' ? 'Work centers' : 'Раб. центров'}</div>
-              <div className="lib-stat-value num">{new Set(detail.operations.map(o => o.workCenter)).size}</div>
+              <div className="lib-stat-value num">{new Set((detail.operations||[]).map(o => o.workCenter)).size}</div>
             </div>
             <div className="lib-stat">
               <div className="lib-stat-label">{S.lastUpdate}</div>
@@ -3247,7 +3264,7 @@ function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail 
                 </tr>
               </thead>
               <tbody>
-                {detail.operations.map(op => (
+                {(detail.operations||[]).map(op => (
                   <tr key={op.num} className="row-hover">
                     <td><span className="op-num">{String(op.num).padStart(3, '0')}</span></td>
                     <td><b>{op.name}</b></td>
@@ -3271,6 +3288,13 @@ function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail 
 function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSelectOrder, activeOrderId }) {
   const S = useStrings(lang);
   const order = data.orders[0];
+
+  if (!order) return (
+    <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>
+      <p style={{ marginBottom:16 }}>Нет активных заказов</p>
+    </div>
+  );
+
   const [items, setItems] = React.useState(() => order.items.map(it => ({ ...it })));
   const [number] = React.useState(order.number);
   const [customer, setCustomer] = React.useState(order.customer);
@@ -3293,12 +3317,12 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
   // Computed: total ops, total time
   const totalOps = items.reduce((s, it) => {
     const det = data.details.find(d => d.id === it.detailId);
-    return s + (det ? det.operations.length : 0);
+    return s + (det ? (det.operations||[]).length : 0);
   }, 0);
   const totalTime = items.reduce((s, it) => {
     const det = data.details.find(d => d.id === it.detailId);
     if (!det) return s;
-    return s + det.operations.reduce((ss, o) => ss + o.time, 0) * it.quantity;
+    return s + (det.operations||[]).reduce((ss, o) => ss + o.time, 0) * it.quantity;
   }, 0);
   const totalUnits = items.reduce((s, it) => s + it.quantity, 0);
 
@@ -3387,10 +3411,10 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
                       <span className="muted" style={{ marginLeft: 10 }}>{det.material}</span>
                     </div>
                     <div className="ops-tag-list">
-                      {det.operations.slice(0, 6).map(op => (
+                      {(det.operations||[]).slice(0, 6).map(op => (
                         <span key={op.num} className="ops-tag">{String(op.num).padStart(2,'0')} {op.name.slice(0, 14)}</span>
                       ))}
-                      {det.operations.length > 6 && <span className="ops-tag">+{det.operations.length - 6}</span>}
+                      {(det.operations||[]).length > 6 && <span className="ops-tag">+{(det.operations||[]).length - 6}</span>}
                     </div>
                   </div>
                   <div className="qty-stepper">
@@ -3399,8 +3423,8 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
                     <button onClick={() => updateQty(idx, it.quantity + 1)}>+</button>
                   </div>
                   <div style={{ textAlign: 'right', fontSize: 11 }}>
-                    <div className="num"><b>{det.operations.length * it.quantity}</b> <span className="muted">{S.ops}</span></div>
-                    <div className="muted num">{det.operations.reduce((s, o) => s + o.time, 0) * it.quantity}{S.min}</div>
+                    <div className="num"><b>{(det.operations||[]).length * it.quantity}</b> <span className="muted">{S.ops}</span></div>
+                    <div className="muted num">{(det.operations||[]).reduce((s, o) => s + o.time, 0) * it.quantity}{S.min}</div>
                   </div>
                   <button className="icon-btn" onClick={() => removeLine(idx)} title={lang === 'en' ? 'Remove' : 'Удалить'}>
                     <Icon name="trash" size={14} />
@@ -3430,7 +3454,7 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
                 <div className="kpi-label">{S.totalOps}</div>
                 <div className="kpi-value num" style={{ fontSize: 22 }}>{items.reduce((s, it) => {
                   const det = data.details.find(d => d.id === it.detailId);
-                  return s + (det ? det.operations.length * it.quantity : 0);
+                  return s + (det ? (det.operations||[]).length * it.quantity : 0);
                 }, 0)}</div>
               </div>
               <div>
@@ -3496,6 +3520,14 @@ function WorkCenterPreview({ items, data, lang }) {
 function RouteSheetView({ data, tasks, lang, qrSize, onClose, onScanQR }) {
   const S = useStrings(lang);
   const order = data.orders[0];
+
+  if (!order) return (
+    <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>
+      <p>Нет заказа для печати</p>
+      <button className="btn" onClick={onClose} style={{ marginTop:16 }}>← Назад</button>
+    </div>
+  );
+
   const items = order.items.map(it => ({
     ...it,
     det: data.details.find(d => d.id === it.detailId),
@@ -4441,12 +4473,12 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
     setCameraOn(true);
   }
 
-  // Confirm action — called from modal with qty + operator + action
-  async function confirmClose(qty, operator, action) {
+  // Confirm action — called from modal with qty + operator + action + comment + closeStatus
+  async function confirmClose(qty, operator, action, comment, closeStatus) {
     if (!detected?.task) return;
     setClosing(true);
     try {
-      await onScanResult(detected.task.id, detected.qrText, qty, operator, action);
+      await onScanResult(detected.task.id, detected.qrText, qty, operator, action, comment || '', closeStatus || 'done');
     } finally {
       setClosing(false);
       setPendingClose(null);
@@ -4688,6 +4720,8 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
   const S = window.useStrings(lang);
   const [qty, setQty]           = React.useState(task.planned - task.completed);
   const [operator, setOperator] = React.useState(task.operator || '');
+  const [comment, setComment]   = React.useState('');
+  const [closeStatus, setCloseStatus] = React.useState('done');
   const isStart = action === 'start';
 
 
@@ -4750,6 +4784,25 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
               />
             </div>
           </div>
+          {!isStart && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:4 }}>
+              <div className="field">
+                <span className="field-label">{lang === 'en' ? 'Result' : 'Результат'}</span>
+                <select className="select" value={closeStatus} onChange={e=>setCloseStatus(e.target.value)} style={{width:'100%'}}>
+                  <option value="done">{lang === 'en' ? 'Done' : 'Выполнена'}</option>
+                  <option value="rejected">{lang === 'en' ? 'Rejected (defect)' : 'Брак'}</option>
+                  <option value="rework">{lang === 'en' ? 'Rework required' : 'Переделка'}</option>
+                  <option value="paused">{lang === 'en' ? 'Paused (no material)' : 'Пауза (нет материала)'}</option>
+                </select>
+              </div>
+              <div className="field">
+                <span className="field-label">{lang === 'en' ? 'Comment' : 'Комментарий'}</span>
+                <input className="input" value={comment} onChange={e=>setComment(e.target.value)}
+                  placeholder={lang === 'en' ? 'Optional note…' : 'Замечание…'}
+                  style={{ width:'100%' }}/>
+              </div>
+            </div>
+          )}
           <div className="alert" style={{ marginTop:14 }}>
             <Icon name="check" size={14}/>
             <span>{hint}</span>
@@ -4759,7 +4812,7 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
           <button className="btn" onClick={onCancel} disabled={closing}>{S.cancel}</button>
           <button className="btn primary"
             style={ isStart ? { background:'#3b82f6',borderColor:'#3b82f6' } : {} }
-            onClick={() => onConfirm(qty, operator, action)} disabled={closing}>
+            onClick={() => onConfirm(qty, operator, action, comment, closeStatus)} disabled={closing}>
             <Icon name="check" size={14}/>{closing ? (lang==='en'?'Saving…':'Сохранение…') : confirmLabel}
           </button>
         </div>
@@ -4787,16 +4840,18 @@ const API_BASE = '/api';
 
 const Auth = {
   _token: null,
+  // refresh_token теперь в HttpOnly cookie — браузер отправляет его автоматически
+  // localStorage хранит только несекретные данные о пользователе (не токены)
   getToken:   () => Auth._token,
   setToken:   (t) => { Auth._token = t; },
-  getRefresh: () => localStorage.getItem('refresh_token'),
-  setRefresh: (t) => { if (t) localStorage.setItem('refresh_token', t); },
+  getRefresh: () => null,    // cookie читает только сервер
+  setRefresh: (t) => {},     // сервер сам устанавливает cookie
   getUser:    () => { try { return JSON.parse(localStorage.getItem('auth_user') || 'null'); } catch { return null; } },
   setUser:    (u) => localStorage.setItem('auth_user', JSON.stringify(u)),
-  clear:      () => { Auth._token = null; localStorage.removeItem('refresh_token'); localStorage.removeItem('auth_user'); },
+  clear:      () => { Auth._token = null; localStorage.removeItem('auth_user'); },
   can:        (p) => { const u = Auth.getUser(); return u?.permissions?.includes(p) ?? false; },
   isAdmin:    () => Auth.getUser()?.role === 'admin',
-  isLoggedIn: () => !!localStorage.getItem('refresh_token') || !!Auth._token,
+  isLoggedIn: () => !!Auth.getUser() || !!Auth._token,
 };
 
 let _onAuthExpired = null;
@@ -4809,10 +4864,11 @@ const api = {
     const opts = { method, headers };
     if (body !== undefined) opts.body = JSON.stringify(body);
     let r = await fetch(API_BASE + path, opts);
-    if (r.status === 401 && Auth.getRefresh()) {
+    if (r.status === 401 && Auth.getUser()) {
       const ref = await fetch(API_BASE + '/auth/refresh', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: Auth.getRefresh() }),
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
       });
       if (ref.ok) {
         const d = await ref.json();
@@ -4856,6 +4912,7 @@ function apiTasksToFrontend(tasks) {
     opNum: Number(t.op_num), opName: t.op_name, workCenter: t.work_center,
     time: Number(t.time_min), planned: Number(t.planned), completed: Number(t.completed),
     status: t.status, qrText: t.qr_text, operator: t.operator, updatedAt: t.updated_at,
+    startedAt: t.started_at,
   }));
 }
 function apiScanLogToFrontend(logs) {
@@ -4863,6 +4920,7 @@ function apiScanLogToFrontend(logs) {
     ts: l.scanned_at ? l.scanned_at.slice(11, 16) : '',
     taskId: l.task_id, qr: l.qr_text, detail: l.detail_id,
     op: l.op_info, operator: l.operator, result: l.result, quantity: l.quantity,
+    comment: l.comment, actualTime: l.actual_time_min,
   }));
 }
 
@@ -4942,7 +5000,7 @@ function ModalEditDetail({ lang, detail, onClose, onSaved }) {
   const [unit, setUnit]         = React.useState(detail.unit || 'шт');
   const [drawing, setDrawing]   = React.useState(detail.drawing || '');
   const [ops, setOps]           = React.useState(
-    detail.operations.map(o => ({ num: o.num, name: o.name, workCenter: o.workCenter||o.work_center||'', time: Number(o.time||o.time_min||0) }))
+    (detail.operations||[]).map(o => ({ num: o.num, name: o.name, workCenter: o.workCenter||o.work_center||'', time: Number(o.time||o.time_min||0) }))
   );
   const [saving, setSaving] = React.useState(false);
   const [err, setErr]       = React.useState('');
@@ -5583,7 +5641,8 @@ function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   window.__APP_LANG = t.lang;
 
-  const [authUser, setAuthUser]       = React.useState(() => Auth.getUser());
+  const [authUser, setAuthUser]       = React.useState(null);
+  const [appReady, setAppReady]       = React.useState(false);
   const [showAdmin, setShowAdmin]     = React.useState(false);
   const [data, setData]               = React.useState(null);
   const [tasks, setTasks]             = React.useState([]);
@@ -5594,11 +5653,35 @@ function App() {
   const [appUsers, setAppUsers]       = React.useState([]);
   const [editingDetail, setEditingDetail] = React.useState(null);
   const [editingOrder,  setEditingOrder]  = React.useState(null);
+  const [confirmDlg, setConfirmDlg]       = React.useState(null);
   const [activeOrderId, setActiveOrderId] = React.useState(null);
 
   React.useEffect(() => {
     _onAuthExpired = () => { Auth.clear(); setAuthUser(null); setData(null); };
     window.__api = api;
+
+    // Восстанавливаем сессию при загрузке страницы через HttpOnly cookie
+    const savedUser = Auth.getUser();
+    if (savedUser) {
+      // Есть данные пользователя — пробуем обновить access token через cookie
+      fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      }).then(r => {
+        if (r.ok) return r.json();
+        throw new Error('refresh failed');
+      }).then(d => {
+        Auth.setToken(d.access_token);
+        setAuthUser(savedUser);
+      }).catch(() => {
+        Auth.clear();
+        setAuthUser(null);
+      }).finally(() => setAppReady(true));
+    } else {
+      setAppReady(true);
+    }
   }, []);
 
   React.useEffect(() => {
@@ -5634,13 +5717,23 @@ function App() {
     setTimeout(()=>setToasts(prev=>prev.filter(x=>x.id!==id)), 3000);
   }
 
-  async function closeTask(taskId, qrText, qty, operator, action) {
+  async function closeTask(taskId, qrText, qty, operator, action, comment, closeStatus) {
     const op = operator || authUser?.name || 'Оператор';
     try {
       if (action === 'start') {
         await api.patch('/tasks/'+taskId+'/status', { status:'in_progress', operator:op });
       } else {
-        await api.post('/tasks/'+taskId+'/close', { operator:op, qr_text:qrText, completed:qty });
+        await api.post('/tasks/'+taskId+'/close', {
+          operator: op,
+          qr_text:  qrText,
+          completed: qty,
+          comment:  comment || undefined,
+          // closeStatus maps to scan_log result, but task status stays 'done' for paused/rework too
+        });
+        // If rejected/paused/rework — update task status separately
+        if (closeStatus && closeStatus !== 'done') {
+          await api.patch('/tasks/'+taskId+'/status', { status: closeStatus, operator: op });
+        }
       }
       setTasks(prev=>prev.map(t=>t.id===taskId?{...t,status:action==='start'?'in_progress':'done',completed:action==='start'?t.completed:(qty??t.planned),operator:op}:t));
       if (action !== 'start') {
@@ -5659,6 +5752,7 @@ function App() {
     Auth.clear(); setAuthUser(null); setData(null);
   }
 
+  if (!appReady) return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--fg-2)',fontSize:14 }}>Загрузка…</div>;
   if (!authUser) return <LoginScreen onLogin={handleLogin}/>;
   if (showAdmin) return <AdminPanel lang={t.lang} onBack={()=>setShowAdmin(false)}/>;
   if (!data)     return <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--fg-2)',fontSize:14 }}>Загрузка данных…</div>;
@@ -5714,10 +5808,22 @@ function App() {
               <OrderBuilder data={activeData} tasks={tasks} lang={t.lang}
                 onPrint={()=>setRoute('routesheet')}
                 onSave={async()=>{ pushToast('Заказ сохранён'); await loadAll(); }}
-                onDeleteOrder={async o=>{
-                  if (!window.confirm('Удалить заказ '+o.number+'?')) return;
-                  try { await api.delete('/orders/'+o.id); await loadAll(); pushToast('Заказ удалён'); }
-                  catch(e){ pushToast('Ошибка: '+e.message); }
+                onDeleteOrder={o=>{
+                  setConfirmDlg({
+                    title: 'Удалить заказ?',
+                    message: `Заказ ${o.number} и все его задания будут удалены безвозвратно.`,
+                    action: 'Удалить',
+                    onConfirm: async()=>{
+                      try {
+                        await api.delete('/orders/'+o.id);
+                        setActiveOrderId(null);
+                        await loadAll();
+                        pushToast('Заказ ' + o.number + ' удалён');
+                        // Если заказов больше нет — переходим на дашборд
+                        if (data.orders.length <= 1) setRoute('dashboard');
+                      } catch(e){ pushToast('Ошибка: '+e.message); }
+                    }
+                  });
                 }}
                 onSelectOrder={async o=>{
                   try {
@@ -5736,13 +5842,22 @@ function App() {
             <Library data={data} tasks={tasks} lang={t.lang}
               onNewDetail={()=>setModal('newDetail')}
               onEditDetail={d=>setEditingDetail(d)}
-              onDeleteDetail={async d=>{
-                if (!window.confirm('Удалить деталь '+d.name+'?')) return;
-                try { await api.delete('/details/'+d.id); await loadAll(); pushToast('Деталь удалена'); }
-                catch(e){ pushToast('Ошибка: '+e.message); }
+              onDeleteDetail={d=>{
+                setConfirmDlg({
+                  title: 'Удалить деталь?',
+                  message: `Деталь "${d.name}" будет удалена безвозвратно.`,
+                  action: 'Удалить',
+                  onConfirm: async()=>{
+                    try {
+                      await api.delete('/details/'+d.id);
+                      await loadAll();
+                      pushToast('Деталь ' + d.name + ' удалена');
+                    } catch(e){ pushToast('Ошибка: '+e.message); }
+                  }
+                });
               }}/>
           )}
-          {route === 'scanner' && <Scanner data={data} tasks={tasks} scanLog={scanLog} lang={t.lang} qrSize={t.qrSize} users={appUsers} onScanResult={(id,qr,qty,op,action)=>closeTask(id,qr,qty,op,action)}/>}
+          {route === 'scanner' && <Scanner data={data} tasks={tasks} scanLog={scanLog} lang={t.lang} qrSize={t.qrSize} users={appUsers} onScanResult={(id,qr,qty,op,action,comment,closeStatus)=>closeTask(id,qr,qty,op,action,comment,closeStatus)}/>}
           {route === 'orders-list' && <OrdersListView data={data} tasks={tasks} lang={t.lang}
             onOpenOrder={id => {
               if (id === 'new') { setModal('newOrder'); return; }
@@ -5755,6 +5870,22 @@ function App() {
       </div>
 
       <div className="toast-stack">{toasts.map(toast=>(<div className="toast" key={toast.id}>{toast.msg}</div>))}</div>
+
+      {confirmDlg && (
+        <div style={{ position:'fixed',inset:0,zIndex:2000,background:'rgba(0,0,0,0.55)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+          <div className="card" style={{ width:380,padding:24,display:'flex',flexDirection:'column',gap:16 }}>
+            <b style={{ fontSize:15 }}>{confirmDlg.title}</b>
+            <p style={{ fontSize:13,color:'var(--fg-1)',margin:0 }}>{confirmDlg.message}</p>
+            <div style={{ display:'flex',gap:8,justifyContent:'flex-end' }}>
+              <button className="btn" onClick={()=>setConfirmDlg(null)}>Отмена</button>
+              <button className="btn primary" style={{ background:'var(--danger)',borderColor:'var(--danger)' }}
+                onClick={()=>{ confirmDlg.onConfirm(); setConfirmDlg(null); }}>
+                {confirmDlg.action || 'Удалить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Мобильная нижняя навигация */}
       <nav className="mobile-nav">

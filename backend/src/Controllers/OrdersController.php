@@ -7,6 +7,8 @@ use Marshrut\Database\Connection;
 use function Marshrut\json_out;
 use function Marshrut\request_body;
 use function Marshrut\validate;
+use function Marshrut\sanitize_string;
+use function Marshrut\app_log;
 
 class OrdersController
 {
@@ -15,18 +17,19 @@ class OrdersController
     {
         $db     = Connection::get();
         $status = $_GET['status'] ?? '';
+        $limit  = max(1, min(200, (int)($_GET['limit']  ?? 100)));
+        $offset = max(0, (int)($_GET['offset'] ?? 0));
 
-        $sql  = 'SELECT * FROM orders';
-        $args = [];
+        $where = $status !== '' ? ' WHERE status = :status' : '';
+        $args  = $status !== '' ? [':status' => $status] : [];
 
-        if ($status !== '') {
-            $sql  .= ' WHERE status = :status';
-            $args[':status'] = $status;
-        }
+        $total = $db->prepare("SELECT COUNT(*) FROM orders{$where}");
+        $total->execute($args);
+        $totalCount = (int)$total->fetchColumn();
 
-        $sql .= ' ORDER BY created_at DESC';
-
-        $stmt = $db->prepare($sql);
+        $stmt = $db->prepare("SELECT * FROM orders{$where} ORDER BY created_at DESC LIMIT :lim OFFSET :off");
+        $args[':lim'] = $limit;
+        $args[':off'] = $offset;
         $stmt->execute($args);
         $orders = $stmt->fetchAll();
 
@@ -35,7 +38,7 @@ class OrdersController
             $order['stats'] = self::loadStats($db, $order['id']);
         }
 
-        json_out(['data' => $orders, 'total' => count($orders)]);
+        json_out(['data' => $orders, 'total' => $totalCount, 'limit' => $limit, 'offset' => $offset]);
     }
 
     // GET /api/orders/{id}
@@ -113,29 +116,52 @@ class OrdersController
         $db   = Connection::get();
         $body = request_body();
 
-        $db->prepare(
-            'UPDATE orders SET number=:number, customer=:customer, foreman=:foreman,
-                               status=:status, priority=:priority, due_date=:due_date
-              WHERE id = :id'
-        )->execute([
-            ':id'       => $params['id'],
-            ':number'   => $body['number']   ?? '',
-            ':customer' => $body['customer'] ?? '',
-            ':foreman'  => $body['foreman']  ?? null,
-            ':status'   => $body['status']   ?? 'plan',
-            ':priority' => $body['priority'] ?? 'normal',
-            ':due_date' => $body['due_date'] ?? date('Y-m-d'),
-        ]);
+        if ($err = validate($body, ['number', 'customer', 'due_date'])) {
+            json_out(['error' => $err], 422);
+        }
 
-        if (isset($body['items'])) {
-            // Remove tasks that belong to this order, then regenerate
-            $db->prepare('DELETE FROM tasks WHERE order_id = :id')
-               ->execute([':id' => $params['id']]);
-            $db->prepare('DELETE FROM order_items WHERE order_id = :id')
-               ->execute([':id' => $params['id']]);
+        $allowed_status   = ['plan', 'in_work', 'done'];
+        $allowed_priority = ['low', 'normal', 'high'];
+        $status   = $body['status']   ?? 'plan';
+        $priority = $body['priority'] ?? 'normal';
 
-            self::insertItems($db, $params['id'], $body['items']);
-            self::generateTasks($db, $params['id']);
+        if (!in_array($status, $allowed_status, true)) {
+            json_out(['error' => 'Недопустимый статус'], 422);
+        }
+        if (!in_array($priority, $allowed_priority, true)) {
+            json_out(['error' => 'Недопустимый приоритет'], 422);
+        }
+
+        try {
+            $db->beginTransaction();
+
+            $db->prepare(
+                'UPDATE orders SET number=:number, customer=:customer, foreman=:foreman,
+                                   status=:status, priority=:priority, due_date=:due_date
+                  WHERE id = :id'
+            )->execute([
+                ':id'       => $params['id'],
+                ':number'   => sanitize_string($body['number'],   50),
+                ':customer' => sanitize_string($body['customer'], 255),
+                ':foreman'  => sanitize_string($body['foreman'] ?? '', 100) ?: null,
+                ':status'   => $status,
+                ':priority' => $priority,
+                ':due_date' => $body['due_date'],
+            ]);
+
+            if (isset($body['items'])) {
+                $db->prepare('DELETE FROM tasks WHERE order_id = :id')->execute([':id' => $params['id']]);
+                $db->prepare('DELETE FROM order_items WHERE order_id = :id')->execute([':id' => $params['id']]);
+                self::insertItems($db, $params['id'], $body['items']);
+                self::generateTasks($db, $params['id']);
+            }
+
+            $db->commit();
+            app_log('info', 'order.updated', ['id' => $params['id'], 'status' => $status]);
+        } catch (\Exception $e) {
+            $db->rollBack();
+            app_log('error', 'order.update_failed', ['id' => $params['id'], 'err' => $e->getMessage()]);
+            json_out(['error' => $e->getMessage()], 500);
         }
 
         self::show($params);

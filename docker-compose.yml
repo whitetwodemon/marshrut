@@ -1,15 +1,48 @@
 services:
 
-  mysql:
-    image: mysql:8.0
-    container_name: marshrut-mysql
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx.Dockerfile
     restart: unless-stopped
-    command: >
-      mysqld
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
-      --character-set-client-handshake=ON
-      --init-connect='SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci'
+    ports:
+      - "${APP_PORT:-8080}:80"
+      - "${APP_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      php:
+        condition: service_started
+    networks:
+      - app
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+    restart: unless-stopped
+    environment:
+      DB_HOST:        mysql
+      DB_PORT:        "3306"
+      DB_NAME:        ${DB_NAME:-marshrut}
+      DB_USER:        ${DB_USER:-marshrut}
+      DB_PASSWORD:    ${DB_PASSWORD:-marshrut}
+      JWT_SECRET:     ${JWT_SECRET:-change-me-in-production}
+      CORS_ORIGIN:    ${CORS_ORIGIN:-*}
+      ADMIN_EMAIL:    ${ADMIN_EMAIL:-admin@marshrut.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+      ADMIN_NAME:     ${ADMIN_NAME:-Admin}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app
+
+  mysql:
+    build:
+      context: .
+      dockerfile: docker/mysql.Dockerfile
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
       MYSQL_DATABASE:      ${DB_NAME:-marshrut}
@@ -17,71 +50,35 @@ services:
       MYSQL_PASSWORD:      ${DB_PASSWORD:-marshrut}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${MYSQL_ROOT_PASSWORD:-rootsecret}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootsecret}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
       start_period: 30s
     networks:
-      - internal
+      - app
 
-  php:
+  backup:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: marshrut-php
+      context: .
+      dockerfile: docker/backup.Dockerfile
     restart: unless-stopped
     environment:
-      DB_HOST:        mysql
-      DB_PORT:        3306
-      DB_NAME:        ${DB_NAME:-marshrut}
-      DB_USER:        ${DB_USER:-marshrut}
-      DB_PASSWORD:    ${DB_PASSWORD:-marshrut}
-      JWT_SECRET:     ${JWT_SECRET:-change-me-in-production-use-long-random-string}
-      CORS_ORIGIN:    ${CORS_ORIGIN:-*}
-      ADMIN_EMAIL:    ${ADMIN_EMAIL:-admin@marshrut.local}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
-      ADMIN_NAME:     ${ADMIN_NAME:-Администратор}
+      DB_HOST:     mysql
+      DB_NAME:     ${DB_NAME:-marshrut}
+      DB_USER:     ${DB_USER:-marshrut}
+      DB_PASSWORD: ${DB_PASSWORD:-marshrut}
+    volumes:
+      - ./backups:/backups
     depends_on:
       mysql:
         condition: service_healthy
     networks:
-      - internal
-
-  # ── Frontend builder (Node/Vite) — runs once and exits ────────────
-  frontend-build:
-    image: node:20-alpine
-    container_name: marshrut-frontend-build
-    working_dir: /app
-    volumes:
-      - ./frontend-src:/app
-      - ./frontend:/dist
-    command: sh -c "npm install --silent && npm run build -- --outDir /dist"
-    profiles:
-      - build  # запускается только явно: docker compose --profile build up frontend-build
-
-  nginx:
-    image: nginx:alpine
-    container_name: marshrut-nginx
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8080}:80"
-      - "${APP_HTTPS_PORT:-8443}:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./frontend:/var/www/html:ro
-      - ./certs:/etc/nginx/certs:ro
-    depends_on:
-      - php
-    networks:
-      - internal
-      - external
+      - app
 
 volumes:
   mysql_data:
 
 networks:
-  internal:
-  external:
+  app:

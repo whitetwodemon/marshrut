@@ -6,6 +6,8 @@ namespace Marshrut\Controllers;
 use Marshrut\Database\Connection;
 use function Marshrut\json_out;
 use function Marshrut\request_body;
+use function Marshrut\sanitize_string;
+use function Marshrut\app_log;
 
 class TasksController
 {
@@ -15,6 +17,8 @@ class TasksController
         $db     = Connection::get();
         $where  = [];
         $args   = [];
+        $limit  = max(1, min(500, (int)($_GET['limit']  ?? 200)));
+        $offset = max(0, (int)($_GET['offset'] ?? 0));
 
         if (!empty($_GET['order_id'])) {
             $where[] = 'order_id = :order_id';
@@ -29,15 +33,21 @@ class TasksController
             $args[':status'] = $_GET['status'];
         }
 
-        $sql = 'SELECT * FROM tasks'
-             . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-             . ' ORDER BY detail_id, op_num';
+        $wClause = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+
+        $total = $db->prepare("SELECT COUNT(*) FROM tasks{$wClause}");
+        $total->execute($args);
+        $totalCount = (int)$total->fetchColumn();
+
+        $sql = "SELECT * FROM tasks{$wClause} ORDER BY detail_id, op_num LIMIT :lim OFFSET :off";
+        $args[':lim'] = $limit;
+        $args[':off'] = $offset;
 
         $stmt = $db->prepare($sql);
         $stmt->execute($args);
         $tasks = $stmt->fetchAll();
 
-        json_out(['data' => $tasks, 'total' => count($tasks)]);
+        json_out(['data' => $tasks, 'total' => $totalCount, 'limit' => $limit, 'offset' => $offset]);
     }
 
     // GET /api/tasks/{id}
@@ -61,7 +71,7 @@ class TasksController
         $db   = Connection::get();
         $body = request_body();
 
-        $allowed = ['waiting', 'in_progress', 'done'];
+        $allowed = ['waiting', 'in_progress', 'done', 'paused', 'rejected', 'rework'];
         $status  = $body['status'] ?? '';
 
         if (!in_array($status, $allowed, true)) {
@@ -79,15 +89,28 @@ class TasksController
         $completed = (int) ($body['completed'] ?? ($status === 'done' ? $task['planned'] : $task['completed']));
         $operator  = $body['operator'] ?? $task['operator'];
 
-        $db->prepare(
+        $startedAt = ($status === 'in_progress' && $task['status'] === 'waiting')
+            ? 'NOW()' : ':started_old';
+
+        $upd = $db->prepare(
             'UPDATE tasks SET status=:status, completed=:completed,
-                              operator=:operator, updated_at=NOW()
+                              operator=:operator, updated_at=NOW(),
+                              started_at = COALESCE(started_at, IF(status=:s2, NOW(), started_at))
               WHERE id = :id'
-        )->execute([
+        );
+        $upd->execute([
             ':status'    => $status,
+            ':s2'        => 'in_progress',
             ':completed' => $completed,
             ':operator'  => $operator,
             ':id'        => $params['id'],
+        ]);
+
+        \Marshrut\app_log('info', 'task.status_changed', [
+            'task_id'  => $params['id'],
+            'from'     => $task['status'],
+            'to'       => $status,
+            'operator' => $operator,
         ]);
 
         self::show($params);
@@ -107,27 +130,48 @@ class TasksController
             json_out(['error' => 'Task not found'], 404);
         }
 
-        $operator  = $body['operator'] ?? 'Оператор';
-        $completed = isset($body['completed']) ? (int)$body['completed'] : (int)$task['planned'];
+        $operator      = sanitize_string($body['operator']  ?? 'Оператор', 100);
+        $comment       = sanitize_string($body['comment']   ?? '', 500);
+        $completed     = isset($body['completed']) ? (int)$body['completed'] : (int)$task['planned'];
+        $actualTimeMin = null;
+        if (!empty($task['started_at'])) {
+            $actualTimeMin = (int) round((time() - strtotime($task['started_at'])) / 60);
+        }
 
-        $db->prepare(
-            'UPDATE tasks SET status="done", completed=:completed,
-                              operator=:operator, updated_at=NOW()
-              WHERE id = :id'
-        )->execute([':completed' => $completed, ':operator' => $operator, ':id' => $params['id']]);
+        try {
+            $db->beginTransaction();
 
-        // Write to scan log
-        $db->prepare(
-            'INSERT INTO scan_log (task_id, qr_text, detail_id, op_info, operator, result, quantity)
-             VALUES (:tid, :qr, :did, :op, :operator, "closed", :qty)'
-        )->execute([
-            ':tid'      => $task['id'],
-            ':qr'       => $body['qr_text'] ?? $task['qr_text'],
-            ':did'      => $task['detail_id'],
-            ':op'       => $task['op_num'] . ' ' . $task['op_name'],
-            ':operator' => $operator,
-            ':qty'      => $task['planned'],
-        ]);
+            $db->prepare(
+                'UPDATE tasks SET status="done", completed=:completed,
+                                  operator=:operator, updated_at=NOW()
+                  WHERE id = :id'
+            )->execute([':completed' => $completed, ':operator' => $operator, ':id' => $params['id']]);
+
+            $db->prepare(
+                'INSERT INTO scan_log (task_id, qr_text, detail_id, op_info, operator, result, quantity, comment, actual_time_min)
+                 VALUES (:tid, :qr, :did, :op, :operator, "closed", :qty, :comment, :atm)'
+            )->execute([
+                ':tid'      => $task['id'],
+                ':qr'       => $body['qr_text'] ?? $task['qr_text'],
+                ':did'      => $task['detail_id'],
+                ':op'       => $task['op_num'] . ' ' . $task['op_name'],
+                ':operator' => $operator,
+                ':qty'      => $completed,
+                ':comment'  => $comment ?: null,
+                ':atm'      => $actualTimeMin,
+            ]);
+            \Marshrut\app_log('info', 'task.closed', [
+                'task_id'        => $task['id'],
+                'operator'       => $operator,
+                'actual_time_min'=> $actualTimeMin,
+                'completed'      => $completed,
+            ]);
+
+            $db->commit();
+        } catch (\Exception $e) {
+            $db->rollBack();
+            json_out(['error' => $e->getMessage()], 500);
+        }
 
         self::show($params);
     }

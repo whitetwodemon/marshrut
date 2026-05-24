@@ -1,12 +1,7 @@
 FROM php:8.3-fpm-alpine
 
-# Системные пакеты
-RUN apk add --no-cache nginx supervisor
-
-# PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql
 
-# PHP ini
 RUN { \
     echo "default_charset = UTF-8"; \
     echo "display_errors = Off"; \
@@ -14,34 +9,20 @@ RUN { \
     echo "error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT"; \
 } > /usr/local/etc/php/conf.d/app.ini
 
-# PHP-FPM: unix socket
 RUN { \
     echo "[www]"; \
-    echo "listen = /run/php-fpm.sock"; \
-    echo "listen.owner = nginx"; \
-    echo "listen.group = nginx"; \
-    echo "listen.mode = 0660"; \
+    echo "listen = 0.0.0.0:9000"; \
 } > /usr/local/etc/php-fpm.d/zzz-app.conf
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Backend
 WORKDIR /var/www/api
 COPY backend/composer.json ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY backend/ .
-COPY mysql-init/ ./mysql-init/
 
-# Frontend
-COPY frontend/ /var/www/html/
-
-# Конфиги
-COPY deploy/nginx-single.conf /etc/nginx/nginx.conf
-COPY deploy/supervisord.conf  /etc/supervisor/conf.d/supervisord.conf
-COPY deploy/entrypoint.sh     /entrypoint.sh
+COPY docker/php-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 80
-
+EXPOSE 9000
 CMD ["/entrypoint.sh"]

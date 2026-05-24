@@ -1510,3 +1510,21 @@ button { font-family: inherit; }
 
 /* Мобильная навигация скрыта на десктопе */
 .mobile-nav { display: none; }
+
+/* Новые статусы операций */
+:root {
+  --st-paused-bg:   #fef3c7; --st-paused-fg:   #92400e; --st-paused-line:  #d97706;
+  --st-reject-bg:   #fee2e2; --st-reject-fg:   #991b1b; --st-reject-line:  #dc2626;
+  --st-rework-bg:   #ede9fe; --st-rework-fg:   #5b21b6; --st-rework-line:  #7c3aed;
+}
+[data-theme="dark"] {
+  --st-paused-bg:   rgba(217,119,6,.18); --st-paused-fg:  #fcd34d; --st-paused-line: rgba(217,119,6,.5);
+  --st-reject-bg:   rgba(220,38,38,.18); --st-reject-fg:  #fca5a5; --st-reject-line: rgba(220,38,38,.5);
+  --st-rework-bg:   rgba(124,58,237,.18);--st-rework-fg:  #c4b5fd; --st-rework-line: rgba(124,58,237,.5);
+}
+.pill.paused  { background: var(--st-paused-bg); color: var(--st-paused-fg); }
+.pill.rejected{ background: var(--st-reject-bg); color: var(--st-reject-fg); }
+.pill.rework  { background: var(--st-rework-bg); color: var(--st-rework-fg); }
+.task-row.paused   { opacity: 0.75; }
+.task-row.rejected { opacity: 0.75; border-left: 2px solid var(--st-reject-line); }
+.task-row.rework   { opacity: 0.85; border-left: 2px solid var(--st-rework-line); }

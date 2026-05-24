@@ -127,7 +127,8 @@ class AuthController
     public static function refresh(array $params): void
     {
         $body  = request_body();
-        $token = $body['refresh_token'] ?? '';
+        // Сначала из тела запроса, потом из HttpOnly cookie
+        $token = $body['refresh_token'] ?? $_COOKIE['refresh_token'] ?? '';
         if (!$token) {
             json_out(['error' => 'refresh_token обязателен'], 422);
         }
@@ -164,13 +165,21 @@ class AuthController
     public static function logout(array $params): void
     {
         $body  = request_body();
-        $token = $body['refresh_token'] ?? '';
+        $token = $body['refresh_token'] ?? $_COOKIE['refresh_token'] ?? '';
         if ($token) {
             $hash = hash('sha256', $token);
             Connection::get()
                 ->prepare('DELETE FROM refresh_tokens WHERE token_hash = :hash')
                 ->execute([':hash' => $hash]);
         }
+        // Удаляем HttpOnly cookie
+        setcookie('refresh_token', '', [
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ]);
         json_out(['ok' => true]);
     }
 

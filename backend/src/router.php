@@ -56,8 +56,40 @@ function validate(array $body, array $required): ?string
 {
     foreach ($required as $field) {
         if (!isset($body[$field]) || $body[$field] === '') {
-            return "Missing required field: {$field}";
+            return "Поле «{$field}» обязательно";
         }
     }
     return null;
 }
+
+function sanitize_string(mixed $val, int $maxLen = 500): string
+{
+    $s = trim((string)($val ?? ''));
+    return strlen($s) > $maxLen ? substr($s, 0, $maxLen) : $s;
+}
+
+function validate_email(string $email): bool
+{
+    return (bool) filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
+function validate_int(mixed $val, int $min = 0, int $max = PHP_INT_MAX): bool
+{
+    $n = filter_var($val, FILTER_VALIDATE_INT);
+    return $n !== false && $n >= $min && $n <= $max;
+}
+
+function app_log(string $level, string $msg, array $ctx = []): void
+{
+    $entry = json_encode([
+        'ts'      => date('c'),
+        'level'   => $level,
+        'msg'     => $msg,
+        'ctx'     => $ctx,
+        'ip'      => $_SERVER['REMOTE_ADDR'] ?? '',
+        'path'    => $_SERVER['REQUEST_URI'] ?? '',
+        'method'  => $_SERVER['REQUEST_METHOD'] ?? '',
+    ], JSON_UNESCAPED_UNICODE);
+    error_log($entry);
+}
+

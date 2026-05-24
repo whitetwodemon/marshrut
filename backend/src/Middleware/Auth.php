@@ -80,6 +80,17 @@ class Auth
              VALUES (:uid, :hash, DATE_ADD(NOW(), INTERVAL 30 DAY))'
         )->execute([':uid' => $user['id'], ':hash' => $refreshHash]);
 
-        return ['access_token' => $access, 'refresh_token' => $refreshRaw];
+        // Отправляем refresh token как HttpOnly cookie (XSS-безопасно)
+        $secure   = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $sameSite = $secure ? 'Strict' : 'Lax';
+        setcookie('refresh_token', $refreshRaw, [
+            'expires'  => time() + 86400 * 30,
+            'path'     => '/',
+            'secure'   => $secure,
+            'httponly' => true,
+            'samesite' => $sameSite,
+        ]);
+
+        return ['access_token' => $access, 'refresh_token' => $refreshRaw]; // refresh_token также в HttpOnly cookie
     }
 }

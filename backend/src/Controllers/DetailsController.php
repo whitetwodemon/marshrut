@@ -7,6 +7,8 @@ use Marshrut\Database\Connection;
 use function Marshrut\json_out;
 use function Marshrut\request_body;
 use function Marshrut\validate;
+use function Marshrut\sanitize_string;
+use function Marshrut\app_log;
 
 class DetailsController
 {
@@ -129,36 +131,51 @@ class DetailsController
         $db   = Connection::get();
         $body = request_body();
 
-        $db->prepare(
-            'UPDATE details SET code=:code, name=:name, material=:material,
-                                unit=:unit, drawing=:drawing
-              WHERE id = :id'
-        )->execute([
-            ':id'       => $params['id'],
-            ':code'     => $body['code']     ?? '',
-            ':name'     => $body['name']     ?? '',
-            ':material' => $body['material'] ?? '',
-            ':unit'     => $body['unit']     ?? 'шт',
-            ':drawing'  => $body['drawing']  ?? null,
-        ]);
+        if ($err = validate($body, ['code', 'name', 'material'])) {
+            json_out(['error' => $err], 422);
+        }
 
-        if (isset($body['operations'])) {
-            $db->prepare('DELETE FROM operations WHERE detail_id = :id')
-               ->execute([':id' => $params['id']]);
+        try {
+            $db->beginTransaction();
 
-            $ins = $db->prepare(
-                'INSERT INTO operations (detail_id, num, name, work_center, time_min)
-                 VALUES (:did, :num, :name, :wc, :time)'
-            );
-            foreach ($body['operations'] as $op) {
-                $ins->execute([
-                    ':did'  => $params['id'],
-                    ':num'  => (int) $op['num'],
-                    ':name' => $op['name'],
-                    ':wc'   => $op['work_center'],
-                    ':time' => (int) ($op['time_min'] ?? $op['time'] ?? 0),
-                ]);
+            $db->prepare(
+                'UPDATE details SET code=:code, name=:name, material=:material,
+                                    unit=:unit, drawing=:drawing
+                  WHERE id = :id'
+            )->execute([
+                ':id'       => $params['id'],
+                ':code'     => sanitize_string($body['code'],     50),
+                ':name'     => sanitize_string($body['name'],     255),
+                ':material' => sanitize_string($body['material'], 255),
+                ':unit'     => sanitize_string($body['unit']     ?? 'шт', 10),
+                ':drawing'  => sanitize_string($body['drawing']  ?? '', 100) ?: null,
+            ]);
+
+            if (isset($body['operations'])) {
+                $db->prepare('DELETE FROM operations WHERE detail_id = :id')
+                   ->execute([':id' => $params['id']]);
+
+                $ins = $db->prepare(
+                    'INSERT INTO operations (detail_id, num, name, work_center, time_min)
+                     VALUES (:did, :num, :name, :wc, :time)'
+                );
+                foreach ($body['operations'] as $op) {
+                    $ins->execute([
+                        ':did'  => $params['id'],
+                        ':num'  => (int) $op['num'],
+                        ':name' => sanitize_string($op['name'] ?? '', 255),
+                        ':wc'   => sanitize_string($op['work_center'] ?? '', 100),
+                        ':time' => max(0, (int) ($op['time_min'] ?? $op['time'] ?? 0)),
+                    ]);
+                }
             }
+
+            $db->commit();
+            app_log('info', 'detail.updated', ['id' => $params['id']]);
+        } catch (\Exception $e) {
+            $db->rollBack();
+            app_log('error', 'detail.update_failed', ['id' => $params['id'], 'err' => $e->getMessage()]);
+            json_out(['error' => $e->getMessage()], 500);
         }
 
         self::show($params);

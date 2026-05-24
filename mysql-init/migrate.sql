@@ -1,0 +1,19 @@
+ALTER TABLE tasks MODIFY COLUMN status ENUM('waiting','in_progress','done','paused','rejected','rework') NOT NULL DEFAULT 'waiting';
+
+SET @c1 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='marshrut' AND TABLE_NAME='tasks' AND COLUMN_NAME='started_at');
+SET @s1 = IF(@c1=0, 'ALTER TABLE tasks ADD COLUMN started_at TIMESTAMP NULL AFTER operator', 'SELECT 1');
+PREPARE st FROM @s1; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c2 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='marshrut' AND TABLE_NAME='scan_log' AND COLUMN_NAME='comment');
+SET @s2 = IF(@c2=0, 'ALTER TABLE scan_log ADD COLUMN comment VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL AFTER quantity', 'SELECT 1');
+PREPARE st FROM @s2; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c3 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='marshrut' AND TABLE_NAME='scan_log' AND COLUMN_NAME='actual_time_min');
+SET @s3 = IF(@c3=0, 'ALTER TABLE scan_log ADD COLUMN actual_time_min INT NULL AFTER comment', 'SELECT 1');
+PREPARE st FROM @s3; EXECUTE st; DEALLOCATE PREPARE st;
+
+SET @c4 = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA='marshrut' AND TABLE_NAME='tasks' AND INDEX_NAME='idx_updated_at');
+SET @s4 = IF(@c4=0, 'ALTER TABLE tasks ADD INDEX idx_updated_at (updated_at)', 'SELECT 1');
+PREPARE st FROM @s4; EXECUTE st; DEALLOCATE PREPARE st;
+
+SELECT 'Migration complete' AS status;

@@ -59,7 +59,8 @@ CREATE TABLE orders (
     updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_status (status),
-    INDEX idx_number (number)
+    INDEX idx_number (number),
+    INDEX idx_status_created (status, created_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------
@@ -88,9 +89,10 @@ CREATE TABLE tasks (
     time_min    INT          NOT NULL DEFAULT 0,
     planned     INT          NOT NULL DEFAULT 1,
     completed   INT          NOT NULL DEFAULT 0,
-    status      ENUM('waiting','in_progress','done') NOT NULL DEFAULT 'waiting',
+    status      ENUM('waiting','in_progress','done','paused','rejected','rework') NOT NULL DEFAULT 'waiting',
     qr_text     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     operator    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    started_at  TIMESTAMP    NULL,
     updated_at  TIMESTAMP    NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (order_id)  REFERENCES orders(id) ON DELETE CASCADE,
@@ -98,7 +100,8 @@ CREATE TABLE tasks (
     INDEX idx_status (status),
     INDEX idx_qr (qr_text),
     INDEX idx_order  (order_id),
-    INDEX idx_detail (detail_id)
+    INDEX idx_detail (detail_id),
+    INDEX idx_updated_at (updated_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- -------------------------------------------------------
@@ -113,7 +116,10 @@ CREATE TABLE scan_log (
     operator    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     result      ENUM('closed','not_found','already_done') NOT NULL DEFAULT 'closed',
     quantity    INT,
+    comment     VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+    actual_time_min INT NULL,
     scanned_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_task    (task_id),
-    INDEX idx_scanned (scanned_at)
+    INDEX idx_task      (task_id),
+    INDEX idx_scanned   (scanned_at),
+    INDEX idx_detail_id (detail_id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
