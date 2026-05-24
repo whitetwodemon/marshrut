@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 // icons.jsx — minimal stroked iconset (24x24, 1.5 stroke)
 
@@ -81,6 +81,55 @@ const Icon = ({ name, size = 16, className, style }) => {
       <svg {...props}>
         <circle cx="12" cy="12" r="8.5" />
         <path d="M12 7v5l3 2" />
+      </svg>
+    );
+    case 'building': return (
+      <svg {...props}>
+        <rect x="3" y="7" width="18" height="14" rx="1"/>
+        <path d="M8 21V11h8v10"/>
+        <path d="M3 7l9-4 9 4"/>
+        <rect x="10" y="13" width="4" height="4"/>
+      </svg>
+    );
+    case 'grid': return (
+      <svg {...props}>
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    );
+    case 'list': return (
+      <svg {...props}>
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <circle cx="3" cy="6" r="1.5" fill="currentColor"/><circle cx="3" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="3" cy="18" r="1.5" fill="currentColor"/>
+      </svg>
+    );
+    case 'chart': return (
+      <svg {...props}>
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6"  y1="20" x2="6"  y2="14"/>
+        <line x1="2"  y1="20" x2="22" y2="20"/>
+      </svg>
+    );
+    case 'table': return (
+      <svg {...props}>
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <line x1="3" y1="9" x2="21" y2="9"/>
+        <line x1="3" y1="15" x2="21" y2="15"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+      </svg>
+    );
+    case 'chevron-down': return (
+      <svg {...props}>
+        <polyline points="6 9 12 15 18 9" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
+    case 'edit': return (
+      <svg {...props}>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
       </svg>
     );
     case 'close': return (
@@ -200,6 +249,6 @@ const Icon = ({ name, size = 16, className, style }) => {
   }
 };
 
+window.Icon = Icon;
 
-export { Icon };
-export default Icon;
+export { Icon }

@@ -21,6 +21,7 @@ use Marshrut\Controllers\OrdersController;
 use Marshrut\Controllers\TasksController;
 use Marshrut\Controllers\ScanLogController;
 use Marshrut\Controllers\EventsController;
+use Marshrut\Controllers\WorkshopsController;
 
 Cors::handle();
 
@@ -79,6 +80,18 @@ $r->add('POST',  '/api/tasks/{id}/close',   function($p) { Auth::can('scanner.us
 // Scan log
 $r->add('GET',  '/api/scan-log', function($p) { Auth::can('log.view');    ScanLogController::index($p); });
 $r->add('POST', '/api/scan-log', function($p) { Auth::can('scanner.use'); ScanLogController::create($p); });
+
+// Workshops
+$r->add('GET',    '/api/workshops',            function($p) { Auth::require();       WorkshopsController::index($p); });
+$r->add('POST',   '/api/workshops',            function($p) { Auth::can('orders.edit'); WorkshopsController::create($p); });
+$r->add('GET',    '/api/workshops/{id}',       function($p) { Auth::require();       WorkshopsController::show($p); });
+$r->add('PUT',    '/api/workshops/{id}',       function($p) { Auth::can('orders.edit'); WorkshopsController::update($p); });
+$r->add('DELETE', '/api/workshops/{id}',       function($p) { Auth::can('orders.edit'); WorkshopsController::delete($p); });
+$r->add('GET',    '/api/workshops/{id}/load',      function($p) { Auth::require();          WorkshopsController::load($p); });
+$r->add('GET',    '/api/workshops/{id}/equipment', function($p) { Auth::require();          WorkshopsController::equipment($p); });
+$r->add('POST',   '/api/workshops/{id}/equipment', function($p) { Auth::can('orders.edit'); WorkshopsController::addEquipment($p); });
+$r->add('DELETE', '/api/equipment/{id}',           function($p) { Auth::can('orders.edit'); WorkshopsController::deleteEquipment($p); });
+$r->add('GET',    '/api/equipment',                function($p) { Auth::require();          WorkshopsController::allEquipment($p); });
 
 // SSE — real-time events (token via query param since EventSource has no headers)
 $r->add('GET', '/api/events', [EventsController::class, 'stream']);

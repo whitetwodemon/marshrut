@@ -1,12 +1,12 @@
-import React from 'react';
-import { Icon } from '../components/Icon.jsx';
-import { QrCode } from '../components/QrCode.jsx';
+import React from 'react'
+import { Icon } from '../components/Icon.jsx'
+import { QrCode } from '../components/QrCode.jsx'
+import { useStrings } from '../lib/data.jsx'
+import { api } from '../lib/api.js'
+import jsQR from 'jsqr'
 
-// scanner.jsx — Mobile-frame QR scanner with jsQR + manual fallback
-// Note: Icon, QrCode are global consts from icons.jsx / qr.jsx.
-
-function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult }) {
-  const S = window.useStrings(lang);
+function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
+  const S = useStrings(lang);
   const videoRef   = React.useRef(null);
   const canvasRef  = React.useRef(null);
   const streamRef  = React.useRef(null);
@@ -58,7 +58,7 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult }) {
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           ctx.drawImage(video, 0, 0, w, h);
           const img  = ctx.getImageData(0, 0, w, h);
-          const code = window.jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+          const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
           if (code?.data && code.data !== lastScanRef.current.text) {
             const now = Date.now();
             if (now - lastScanRef.current.at > 800) {
@@ -94,12 +94,12 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult }) {
     setCameraOn(true);
   }
 
-  // Confirm action — called from modal with qty + operator + action
-  async function confirmClose(qty, operator, action) {
+  // Confirm action — called from modal with qty + operator + action + comment + closeStatus
+  async function confirmClose(qty, operator, action, comment, closeStatus) {
     if (!detected?.task) return;
     setClosing(true);
     try {
-      await onScanResult(detected.task.id, detected.qrText, qty, operator, action);
+      await onScanResult(detected.task.id, detected.qrText, qty, operator, action, comment || '', closeStatus || 'done');
     } finally {
       setClosing(false);
       setPendingClose(null);
@@ -328,6 +328,7 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult }) {
           lang={lang}
           closing={closing}
           action={pendingClose.action || 'close'}
+          users={users}
           onConfirm={confirmClose}
           onCancel={() => setPendingClose(null)}
         />
@@ -336,15 +337,15 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult }) {
   );
 }
 
-function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, onCancel }) {
-  const S = window.useStrings(lang);
+function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, onCancel, users }) {
+  const S = useStrings(lang);
   const [qty, setQty]           = React.useState(task.planned - task.completed);
   const [operator, setOperator] = React.useState(task.operator || '');
+  const [comment, setComment]   = React.useState('');
+  const [closeStatus, setCloseStatus] = React.useState('done');
   const isStart = action === 'start';
 
-  const operators = lang === 'en'
-    ? ['I. Semyonov','A. Gavrilov','E. Markina','D. Orlov','N. Petrova','R. Yusupov']
-    : ['Семёнов И.Н.','Гаврилов А.Б.','Маркина Е.В.','Орлов Д.С.','Петрова Н.А.','Юсупов Р.Ш.'];
+
 
   const title = isStart
     ? (lang === 'en' ? 'Start operation?' : 'Взять в работу?')
@@ -391,12 +392,38 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
             )}
             <div className="field">
               <span className="field-label">{lang === 'en' ? 'Operator' : 'Исполнитель'}</span>
-              <select className="select" value={operator} onChange={e => setOperator(e.target.value)} style={{ width:'100%' }}>
-                <option value="">{lang === 'en' ? '— select —' : '— выбрать —'}</option>
-                {operators.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
+              <datalist id="operators-list">
+                {(users || []).map(u => <option key={u.id} value={u.name}/>)}
+              </datalist>
+              <input
+                className="input"
+                list="operators-list"
+                value={operator}
+                onChange={e => setOperator(e.target.value)}
+                placeholder={lang === 'en' ? 'Enter name…' : 'Введите имя…'}
+                style={{ width:'100%' }}
+              />
             </div>
           </div>
+          {!isStart && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:4 }}>
+              <div className="field">
+                <span className="field-label">{lang === 'en' ? 'Result' : 'Результат'}</span>
+                <select className="select" value={closeStatus} onChange={e=>setCloseStatus(e.target.value)} style={{width:'100%'}}>
+                  <option value="done">{lang === 'en' ? 'Done' : 'Выполнена'}</option>
+                  <option value="rejected">{lang === 'en' ? 'Rejected (defect)' : 'Брак'}</option>
+                  <option value="rework">{lang === 'en' ? 'Rework required' : 'Переделка'}</option>
+                  <option value="paused">{lang === 'en' ? 'Paused (no material)' : 'Пауза (нет материала)'}</option>
+                </select>
+              </div>
+              <div className="field">
+                <span className="field-label">{lang === 'en' ? 'Comment' : 'Комментарий'}</span>
+                <input className="input" value={comment} onChange={e=>setComment(e.target.value)}
+                  placeholder={lang === 'en' ? 'Optional note…' : 'Замечание…'}
+                  style={{ width:'100%' }}/>
+              </div>
+            </div>
+          )}
           <div className="alert" style={{ marginTop:14 }}>
             <Icon name="check" size={14}/>
             <span>{hint}</span>
@@ -406,7 +433,7 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
           <button className="btn" onClick={onCancel} disabled={closing}>{S.cancel}</button>
           <button className="btn primary"
             style={ isStart ? { background:'#3b82f6',borderColor:'#3b82f6' } : {} }
-            onClick={() => onConfirm(qty, operator, action)} disabled={closing}>
+            onClick={() => onConfirm(qty, operator, action, comment, closeStatus)} disabled={closing}>
             <Icon name="check" size={14}/>{closing ? (lang==='en'?'Saving…':'Сохранение…') : confirmLabel}
           </button>
         </div>
@@ -415,7 +442,4 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
   );
 }
 
-
-
-export { Scanner, CloseOpModal };
-export default Scanner;
+export { Scanner, CloseOpModal }

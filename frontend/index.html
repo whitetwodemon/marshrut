@@ -2245,973 +2245,6 @@ function TweakButton({ label, onClick, secondary = false }) {
   );
 }
 
-Object.assign(window, {
-  useTweaks, TweaksPanel, TweakSection, TweakRow,
-  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
-  TweakText, TweakNumber, TweakColor, TweakButton,
-});
-
-  </script>
-  <script type="text/babel" data-presets="react">
-// icons.jsx — minimal stroked iconset (24x24, 1.5 stroke)
-
-const Icon = ({ name, size = 16, className, style }) => {
-  const props = {
-    width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
-    stroke: 'currentColor', strokeWidth: 1.6,
-    strokeLinecap: 'round', strokeLinejoin: 'round',
-    className: 'ico ' + (className || ''), style,
-  };
-  switch (name) {
-    case 'gauge': return (
-      <svg {...props}>
-        <path d="M12 14l4-4" />
-        <circle cx="12" cy="14" r="0.6" fill="currentColor" stroke="none" />
-        <path d="M3.5 16a9 9 0 0117 0" />
-        <path d="M3.5 16h17" />
-        <path d="M5 13.5l1.4.5M19 13.5l-1.4.5M9 8.5l.9 1.4M15 8.5l-.9 1.4" />
-      </svg>
-    );
-    case 'orders': return (
-      <svg {...props}>
-        <rect x="5" y="3.5" width="14" height="17" rx="1.5" />
-        <path d="M9 8h6M9 12h6M9 16h4" />
-      </svg>
-    );
-    case 'library': return (
-      <svg {...props}>
-        <rect x="3.5" y="4" width="5" height="16" rx="1" />
-        <rect x="10.5" y="4" width="5" height="16" rx="1" />
-        <path d="M17.5 5l3.2 1-3 14.5-3.2-1z" />
-      </svg>
-    );
-    case 'scan': return (
-      <svg {...props}>
-        <path d="M4 8V5.5A1.5 1.5 0 015.5 4H8M16 4h2.5A1.5 1.5 0 0120 5.5V8M20 16v2.5a1.5 1.5 0 01-1.5 1.5H16M8 20H5.5A1.5 1.5 0 014 18.5V16" />
-        <path d="M4 12h16" />
-      </svg>
-    );
-    case 'plus': return (
-      <svg {...props}>
-        <path d="M12 5v14M5 12h14" />
-      </svg>
-    );
-    case 'print': return (
-      <svg {...props}>
-        <path d="M7 8V4h10v4" />
-        <rect x="4.5" y="8" width="15" height="9" rx="1.5" />
-        <rect x="7" y="14" width="10" height="6" rx="0.5" />
-        <circle cx="16.5" cy="11" r="0.7" fill="currentColor" stroke="none" />
-      </svg>
-    );
-    case 'search': return (
-      <svg {...props}>
-        <circle cx="11" cy="11" r="6.5" />
-        <path d="M16 16l4 4" />
-      </svg>
-    );
-    case 'filter': return (
-      <svg {...props}>
-        <path d="M4 5h16l-6 8v6l-4-2v-4z" />
-      </svg>
-    );
-    case 'trash': return (
-      <svg {...props}>
-        <path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13" />
-      </svg>
-    );
-    case 'check': return (
-      <svg {...props}>
-        <path d="M4.5 12.5l5 5 10-11" />
-      </svg>
-    );
-    case 'x': return (
-      <svg {...props}>
-        <path d="M6 6l12 12M18 6l-12 12" />
-      </svg>
-    );
-    case 'clock': return (
-      <svg {...props}>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M12 7v5l3 2" />
-      </svg>
-    );
-    case 'grid': return (
-      <svg {...props}>
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-    );
-    case 'list': return (
-      <svg {...props}>
-        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-        <line x1="8" y1="18" x2="21" y2="18"/>
-        <circle cx="3" cy="6" r="1.5" fill="currentColor"/><circle cx="3" cy="12" r="1.5" fill="currentColor"/>
-        <circle cx="3" cy="18" r="1.5" fill="currentColor"/>
-      </svg>
-    );
-    case 'chart': return (
-      <svg {...props}>
-        <line x1="18" y1="20" x2="18" y2="10"/>
-        <line x1="12" y1="20" x2="12" y2="4"/>
-        <line x1="6"  y1="20" x2="6"  y2="14"/>
-        <line x1="2"  y1="20" x2="22" y2="20"/>
-      </svg>
-    );
-    case 'table': return (
-      <svg {...props}>
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <line x1="3" y1="9" x2="21" y2="9"/>
-        <line x1="3" y1="15" x2="21" y2="15"/>
-        <line x1="9" y1="3" x2="9" y2="21"/>
-      </svg>
-    );
-    case 'chevron-down': return (
-      <svg {...props}>
-        <polyline points="6 9 12 15 18 9" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    );
-    case 'edit': return (
-      <svg {...props}>
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-      </svg>
-    );
-    case 'close': return (
-      <svg {...props}>
-        <line x1="5" y1="5" x2="19" y2="19" strokeWidth="2" strokeLinecap="round" />
-        <line x1="19" y1="5" x2="5" y2="19" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-    case 'dots': return (
-      <svg {...props}>
-        <circle cx="6" cy="12" r="1.2" fill="currentColor" stroke="none" />
-        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
-        <circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none" />
-      </svg>
-    );
-    case 'cog': return (
-      <svg {...props}>
-        <circle cx="12" cy="12" r="2.5" />
-        <path d="M12 3.5l1 2.2 2.4-.4.5 2.4 2.3.6-.5 2.3 1.7 1.7-1.7 1.7.5 2.3-2.3.6-.5 2.4-2.4-.4-1 2.2-1-2.2-2.4.4-.5-2.4-2.3-.6.5-2.3L3 12l1.7-1.7-.5-2.3 2.3-.6.5-2.4 2.4.4z" />
-      </svg>
-    );
-    case 'qr': return (
-      <svg {...props}>
-        <rect x="4" y="4" width="6" height="6" />
-        <rect x="14" y="4" width="6" height="6" />
-        <rect x="4" y="14" width="6" height="6" />
-        <path d="M14 14v3M14 20h3M17 14v3M20 14v6M14 17h0" />
-      </svg>
-    );
-    case 'camera': return (
-      <svg {...props}>
-        <path d="M3.5 8h3l1.5-2h8L17.5 8h3v11h-17z" />
-        <circle cx="12" cy="13.5" r="3.5" />
-      </svg>
-    );
-    case 'arrow-right': return (
-      <svg {...props}>
-        <path d="M5 12h14M13 6l6 6-6 6" />
-      </svg>
-    );
-    case 'arrow-left': return (
-      <svg {...props}>
-        <path d="M19 12H5M11 6l-6 6 6 6" />
-      </svg>
-    );
-    case 'bell': return (
-      <svg {...props}>
-        <path d="M6 17V11a6 6 0 0112 0v6l1.5 1.5h-15z" />
-        <path d="M10 21h4" />
-      </svg>
-    );
-    case 'menu': return (
-      <svg {...props}>
-        <path d="M4 7h16M4 12h16M4 17h16" />
-      </svg>
-    );
-    case 'flash': return (
-      <svg {...props}>
-        <path d="M13 3l-8 11h6l-1 7 8-11h-6z" />
-      </svg>
-    );
-    case 'wifi': return (
-      <svg {...props}>
-        <path d="M5 12a10 10 0 0114 0M8 15a6 6 0 018 0" />
-        <circle cx="12" cy="18" r="0.8" fill="currentColor" stroke="none" />
-      </svg>
-    );
-    case 'battery': return (
-      <svg {...props} strokeWidth="1.2">
-        <rect x="3" y="8" width="16" height="8" rx="1.5" />
-        <rect x="5" y="10" width="11" height="4" fill="currentColor" stroke="none" />
-        <path d="M20.5 10.5v3" />
-      </svg>
-    );
-    case 'signal': return (
-      <svg {...props} strokeWidth="1.4">
-        <path d="M3 18h2v-3H3zM7 18h2v-6H7zM11 18h2V9h-2zM15 18h2V6h-2z" fill="currentColor" />
-      </svg>
-    );
-    case 'route': return (
-      <svg {...props}>
-        <circle cx="6" cy="6" r="2.2" />
-        <circle cx="18" cy="18" r="2.2" />
-        <path d="M6 8.2v6a4 4 0 004 4h2M14 5.8h2a4 4 0 014 4v2" />
-      </svg>
-    );
-    case 'box': return (
-      <svg {...props}>
-        <path d="M3.5 7l8.5-3.5L20.5 7v10L12 20.5 3.5 17z" />
-        <path d="M3.5 7l8.5 4 8.5-4M12 11v9.5" />
-      </svg>
-    );
-    case 'history': return (
-      <svg {...props}>
-        <path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.5M3 4v3.5H6.5" />
-        <path d="M12 7v5l3.5 2" />
-      </svg>
-    );
-    case 'play': return (
-      <svg {...props}>
-        <path d="M7 5l11 7-11 7z" fill="currentColor" />
-      </svg>
-    );
-    case 'pause': return (
-      <svg {...props}>
-        <rect x="6" y="5" width="4" height="14" fill="currentColor" stroke="none" />
-        <rect x="14" y="5" width="4" height="14" fill="currentColor" stroke="none" />
-      </svg>
-    );
-    case 'cross-x': return (
-      <svg {...props}>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9 9l6 6M15 9l-6 6" />
-      </svg>
-    );
-    default: return <svg {...props}><circle cx="12" cy="12" r="4" /></svg>;
-  }
-};
-
-window.Icon = Icon;
-
-  </script>
-  <script type="text/babel" data-presets="react">
-// qr.jsx — QR generation (uses qrcode-generator from CDN, exposed as window.qrcode)
-
-function generateQrSvg(text, size, quietZone = 2) {
-  if (!window.qrcode) return null;
-  try {
-    const qr = window.qrcode(0, 'M');
-    qr.addData(text);
-    qr.make();
-    const count = qr.getModuleCount();
-    const total = count + quietZone * 2;
-    const cellSize = size / total;
-    const cells = [];
-    for (let r = 0; r < count; r++) {
-      for (let c = 0; c < count; c++) {
-        if (qr.isDark(r, c)) {
-          cells.push({
-            x: (c + quietZone) * cellSize,
-            y: (r + quietZone) * cellSize,
-            w: cellSize,
-            h: cellSize,
-          });
-        }
-      }
-    }
-    return { size, cells, total, cellSize };
-  } catch (e) {
-    return null;
-  }
-}
-
-const QrCode = React.memo(function QrCode({ text, size = 90, className, style }) {
-  const data = React.useMemo(() => generateQrSvg(text, size), [text, size]);
-  if (!data) {
-    return (
-      <div style={{ width: size, height: size, border: '1px solid #ccc', display: 'grid', placeItems: 'center', fontSize: 9, color: '#999', ...style }}>
-        QR…
-      </div>
-    );
-  }
-  return (
-    <svg
-      className={'qr-svg ' + (className || '')}
-      width={size} height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      style={style}
-      shapeRendering="crispEdges"
-    >
-      <rect className="bg" x="0" y="0" width={size} height={size} />
-      {data.cells.map((c, i) => (
-        <rect className="cell" key={i} x={c.x} y={c.y} width={c.w} height={c.h} />
-      ))}
-    </svg>
-  );
-});
-
-window.QrCode = QrCode;
-window.generateQrSvg = generateQrSvg;
-
-  </script>
-  <script type="text/babel" data-presets="react">
-// data.jsx — seed data, dictionaries, helpers
-
-const RU = {
-  details: [
-    {
-      id: 'D-001',
-      code: 'ФЛ-100-08',
-      name: 'Фланец воротниковый ДУ-100',
-      material: 'Сталь 09Г2С, ГОСТ 33259-2015',
-      unit: 'шт',
-      drawing: 'ЧЛ.04.218-00',
-      operations: [
-        { num: 10, name: 'Заготовительная', workCenter: 'Гильотина Г-08', time: 4 },
-        { num: 20, name: 'Токарная черновая', workCenter: 'ДИП-300 №3', time: 18 },
-        { num: 30, name: 'Токарная чистовая', workCenter: 'ДИП-300 №3', time: 22 },
-        { num: 40, name: 'Сверлильная (8 отв. ⌀18)', workCenter: '2А554 №2', time: 14 },
-        { num: 50, name: 'Слесарная', workCenter: 'Верстак С-12', time: 8 },
-        { num: 60, name: 'Термообработка', workCenter: 'Печь ТВЧ-40', time: 35 },
-        { num: 70, name: 'Шлифовальная', workCenter: '3Б161 №1', time: 11 },
-        { num: 80, name: 'Гальванопокрытие Zn', workCenter: 'Линия ГП-2', time: 28 },
-        { num: 90, name: 'Маркировка', workCenter: 'Лазер Laser-08', time: 3 },
-        { num: 100, name: 'Контроль ОТК', workCenter: 'ОТК пост-3', time: 6 },
-      ],
-    },
-    {
-      id: 'D-002',
-      code: 'ВЛ-45-220',
-      name: 'Вал шлицевой Z=8',
-      material: 'Сталь 40Х, ТУ 14-1-3957-2020',
-      unit: 'шт',
-      drawing: 'ЧЛ.04.221-00',
-      operations: [
-        { num: 10, name: 'Заготовительная', workCenter: 'Ленточн. БПЛ-160', time: 6 },
-        { num: 20, name: 'Токарная', workCenter: 'CKF-650', time: 32 },
-        { num: 30, name: 'Фрезерная (шлицы)', workCenter: '6Р82Ш №2', time: 26 },
-        { num: 40, name: 'Сверлильная (центр. отв.)', workCenter: '2С132 №1', time: 8 },
-        { num: 50, name: 'Термообработка ТВЧ', workCenter: 'Печь ТВЧ-40', time: 40 },
-        { num: 60, name: 'Шлифовальная', workCenter: '3У10А №2', time: 18 },
-        { num: 70, name: 'Контроль ОТК', workCenter: 'ОТК пост-3', time: 5 },
-      ],
-    },
-  ],
-  // Single order with 2 details, as user requested.
-  orders: [
-    {
-      id: 'O-001',
-      number: 'ЗП-26-0142',
-      createdAt: '2026-05-14',
-      dueDate: '2026-05-22',
-      customer: 'Цех №4 / узел СБ-04.218',
-      foreman: 'Колесников П.А.',
-      status: 'in_work',
-      priority: 'normal',
-      items: [
-        { detailId: 'D-001', quantity: 5 },
-        { detailId: 'D-002', quantity: 2 },
-      ],
-    },
-  ],
-};
-
-const EN = {
-  details: [
-    {
-      id: 'D-001',
-      code: 'FL-100-08',
-      name: 'Welding-neck flange DN-100',
-      material: 'Steel 09G2S, ASTM A350',
-      unit: 'pc',
-      drawing: 'WO.04.218-00',
-      operations: [
-        { num: 10, name: 'Blanking', workCenter: 'Shear G-08', time: 4 },
-        { num: 20, name: 'Rough turning', workCenter: 'Lathe DIP-300 №3', time: 18 },
-        { num: 30, name: 'Finish turning', workCenter: 'Lathe DIP-300 №3', time: 22 },
-        { num: 40, name: 'Drilling (8× ⌀18)', workCenter: 'Drill 2A554 №2', time: 14 },
-        { num: 50, name: 'Bench work', workCenter: 'Bench S-12', time: 8 },
-        { num: 60, name: 'Heat treatment', workCenter: 'Furnace TVCH-40', time: 35 },
-        { num: 70, name: 'Grinding', workCenter: 'Grinder 3B161 №1', time: 11 },
-        { num: 80, name: 'Zn plating', workCenter: 'Line GP-2', time: 28 },
-        { num: 90, name: 'Marking', workCenter: 'Laser-08', time: 3 },
-        { num: 100, name: 'QC inspection', workCenter: 'QC station-3', time: 6 },
-      ],
-    },
-    {
-      id: 'D-002',
-      code: 'SH-45-220',
-      name: 'Splined shaft Z=8',
-      material: 'Steel 40Cr, TU 14-1-3957-2020',
-      unit: 'pc',
-      drawing: 'WO.04.221-00',
-      operations: [
-        { num: 10, name: 'Blanking', workCenter: 'Bandsaw BPL-160', time: 6 },
-        { num: 20, name: 'Turning', workCenter: 'CKF-650', time: 32 },
-        { num: 30, name: 'Spline milling', workCenter: '6R82Sh №2', time: 26 },
-        { num: 40, name: 'Center drilling', workCenter: '2S132 №1', time: 8 },
-        { num: 50, name: 'TVCH treatment', workCenter: 'Furnace TVCH-40', time: 40 },
-        { num: 60, name: 'Grinding', workCenter: '3U10A №2', time: 18 },
-        { num: 70, name: 'QC inspection', workCenter: 'QC station-3', time: 5 },
-      ],
-    },
-  ],
-  orders: [
-    {
-      id: 'O-001',
-      number: 'WO-26-0142',
-      createdAt: '2026-05-14',
-      dueDate: '2026-05-22',
-      customer: 'Shop №4 / assy SB-04.218',
-      foreman: 'P. Kolesnikov',
-      status: 'in_work',
-      priority: 'normal',
-      items: [
-        { detailId: 'D-001', quantity: 5 },
-        { detailId: 'D-002', quantity: 2 },
-      ],
-    },
-  ],
-};
-
-const STATUS_LABEL_RU = { waiting: 'Ожидает', in_progress: 'В работе', done: 'Выполнена', paused: 'Пауза', rejected: 'Брак', rework: 'Переделка' };
-const STATUS_LABEL_EN = { waiting: 'Waiting', in_progress: 'In progress', done: 'Done', paused: 'Paused', rejected: 'Rejected', rework: 'Rework' };
-const ORDER_STATUS_RU = { plan: 'План', in_work: 'В работе', done: 'Выполнен' };
-const ORDER_STATUS_EN = { plan: 'Plan', in_work: 'In progress', done: 'Done' };
-
-// Build operation_tasks from orders × items × operations.
-// Pre-seeds plausible progress so the dashboard isn't empty.
-function buildTasks(orders, details) {
-  const tasks = [];
-  for (const order of orders) {
-    for (const item of order.items) {
-      const det = details.find(d => d.id === item.detailId);
-      if (!det) continue;
-      det.operations.forEach((op, idx) => {
-        // Demo seeding logic: first few ops done, then progress, then waiting
-        let completed = 0;
-        let status = 'waiting';
-        let updatedAt = null;
-        let operator = null;
-        const ratio = idx / (det.operations||[]).length;
-        if (ratio < 0.3) {
-          completed = item.quantity;
-          status = 'done';
-          updatedAt = `2026-05-${15 + Math.min(idx, 4)} ${10 + idx}:${idx < 5 ? '04' : '32'}`;
-          operator = pickOperator(det.id, idx);
-        } else if (ratio < 0.45) {
-          completed = Math.max(1, Math.floor(item.quantity * 0.6));
-          status = 'in_progress';
-          updatedAt = `2026-05-19 14:${20 + idx}`;
-          operator = pickOperator(det.id, idx);
-        }
-        tasks.push({
-          id: `OT-${order.id.slice(2)}-${det.id.slice(2)}-${op.num}`,
-          orderId: order.id,
-          detailId: det.id,
-          opNum: op.num,
-          opName: op.name,
-          workCenter: op.workCenter,
-          time: op.time,
-          planned: item.quantity,
-          completed,
-          status,
-          qrText: `OTASK:${order.id.slice(2)}-${det.id.slice(2)}-${op.num}`,
-          updatedAt,
-          operator,
-        });
-      });
-    }
-  }
-  return tasks;
-}
-
-const OPERATORS_RU = ['Семёнов И.Н.', 'Гаврилов А.Б.', 'Маркина Е.В.', 'Орлов Д.С.', 'Петрова Н.А.', 'Юсупов Р.Ш.'];
-const OPERATORS_EN = ['I. Semyonov', 'A. Gavrilov', 'E. Markina', 'D. Orlov', 'N. Petrova', 'R. Yusupov'];
-function pickOperator(seed, idx) {
-  const ops = window.__APP_LANG === 'en' ? OPERATORS_EN : OPERATORS_RU;
-  const hash = (seed.charCodeAt(2) + idx * 7) % ops.length;
-  return ops[hash];
-}
-
-// Pre-built sample scan log entries (for showing what audit looks like)
-function buildScanLog(tasks) {
-  const log = [];
-  const doneTasks = tasks.filter(t => t.status === 'done').slice(0, 6);
-  doneTasks.forEach((t, i) => {
-    log.push({
-      ts: t.updatedAt || `2026-05-1${5 + i} 09:${10 + i * 7}`,
-      taskId: t.id,
-      qr: t.qrText,
-      detail: t.detailId,
-      op: `${t.opNum} ${t.opName}`,
-      operator: t.operator,
-      result: 'closed',
-      quantity: t.planned,
-    });
-  });
-  return log.reverse();
-}
-
-window.MaršrutData = { RU, EN, STATUS_LABEL_RU, STATUS_LABEL_EN, ORDER_STATUS_RU, ORDER_STATUS_EN, buildTasks, buildScanLog };
-
-  </script>
-  <script type="text/babel" data-presets="react">
-// screens.jsx — Sidebar, Topbar, Dashboard, Library, OrderBuilder, RouteSheet
-// Note: Icon, QrCode are declared in icons.jsx / qr.jsx as global consts.
-
-const T = (key, lang, dicts) => dicts[lang][key] || key;
-
-// =======================================================
-// Strings
-// =======================================================
-const STR_RU = {
-  navOps: 'Производство',
-  navDash: 'Производственное табло',
-  navOrders: 'Заказы',
-  navLibrary: 'Номенклатура',
-  navScan: 'Сканер ОТК',
-  navHistory: 'Журнал сканирований',
-  navReport: 'Отчёт по заказам',
-  navOps2: 'Справочники',
-  workspace: 'ЦЕХ №4 / Механосборка',
-  shift: 'Смена A · ст. мастер Колесников П.А.',
-  active: 'Активный заказ',
-  inWork: 'Операций в работе',
-  doneToday: 'Закрыто сегодня',
-  overdue: 'Под угрозой срока',
-  pcs: 'шт',
-  ops: 'опер.',
-  hr: 'ч',
-  min: 'мин',
-  detail: 'Деталь',
-  qtyShort: 'Кол-во',
-  details: 'Детали',
-  operation: 'Операция',
-  workCenter: 'Раб. центр',
-  operator: 'Оператор',
-  updated: 'Обновлено',
-  scanQR: 'Сканировать QR',
-  printSheet: 'Маршрутный лист',
-  newOrder: '+ Новый заказ',
-  saveOrder: 'Сохранить заказ',
-  generateSheet: 'Сформировать маршрутный лист',
-  recentScans: 'Последние сканирования',
-  feed: 'Лента',
-  closeOp: 'Закрыть операцию',
-  reopen: 'Открыть',
-  search: 'Поиск по коду или названию',
-  detailsCount: 'Деталей',
-  opsTotal: 'Операций',
-  estTime: 'Расч. время',
-  lastUpdate: 'Изменено',
-  drawing: 'Чертёж',
-  material: 'Материал',
-  unit: 'Ед.',
-  techCard: 'Технологическая карта',
-  noTime: 'мин/шт',
-  customer: 'Получатель',
-  dueDate: 'Срок',
-  created: 'Создан',
-  foreman: 'Ст. мастер',
-  status: 'Статус',
-  orderComp: 'Состав заказа',
-  addLine: '+ Добавить деталь',
-  summary: 'Сводка по заказу',
-  totalOps: 'Всего операций',
-  totalTime: 'Расч. время',
-  detailsCt: 'Деталей',
-  partsCt: 'Изделий',
-  routesheet: 'Маршрутный лист',
-  sheetTitle: 'МАРШРУТНЫЙ ЛИСТ',
-  scanInstr: 'Наведите камеру на QR-код операции с бумажного маршрутного листа',
-  cameraOff: 'Камера отключена',
-  enableCam: 'Включить камеру',
-  scanMatch: 'Сопоставлено с операцией:',
-  closeOpQ: 'Закрыть операцию?',
-  confirm: 'Закрыть',
-  cancel: 'Отмена',
-  noTask: 'QR не сопоставлен',
-  log: 'Журнал',
-  signature: 'Подпись',
-  qrCode: 'QR-код',
-  preview: 'Предпросмотр',
-  printNow: 'Печать',
-  manualEntry: 'Ручной ввод',
-  reset: 'Сброс',
-  sheetSubtitle: 'к заказу на производство',
-  page: 'Стр.',
-  of: 'из',
-  signedBy: 'Принял ОТК:',
-  date: 'Дата:',
-  operatorCol: 'Исполнитель',
-  signatureCol: 'Отметка',
-};
-
-const STR_EN = {
-  navOps: 'Production',
-  navDash: 'Production board',
-  navOrders: 'Orders',
-  navLibrary: 'Parts library',
-  navScan: 'QR scanner',
-  navHistory: 'Scan log',
-  navReport: 'Orders report',
-  navOps2: 'Reference',
-  workspace: 'SHOP №4 / Mechanical',
-  shift: 'Shift A · foreman P. Kolesnikov',
-  active: 'Active order',
-  inWork: 'Ops in progress',
-  doneToday: 'Closed today',
-  overdue: 'At risk',
-  pcs: 'pc',
-  ops: 'ops',
-  hr: 'h',
-  min: 'min',
-  detail: 'Part',
-  qtyShort: 'Qty',
-  details: 'Parts',
-  operation: 'Operation',
-  workCenter: 'Work center',
-  operator: 'Operator',
-  updated: 'Updated',
-  scanQR: 'Scan QR',
-  printSheet: 'Route sheet',
-  newOrder: '+ New order',
-  saveOrder: 'Save order',
-  generateSheet: 'Generate route sheet',
-  recentScans: 'Recent scans',
-  feed: 'Feed',
-  closeOp: 'Close operation',
-  reopen: 'Reopen',
-  search: 'Search by code or name',
-  detailsCount: 'Parts',
-  opsTotal: 'Operations',
-  estTime: 'Est. time',
-  lastUpdate: 'Last change',
-  drawing: 'Drawing',
-  material: 'Material',
-  unit: 'Unit',
-  techCard: 'Tech card',
-  noTime: 'min/pc',
-  customer: 'Customer',
-  dueDate: 'Due',
-  created: 'Created',
-  foreman: 'Foreman',
-  status: 'Status',
-  orderComp: 'Order composition',
-  addLine: '+ Add part',
-  summary: 'Order summary',
-  totalOps: 'Total operations',
-  totalTime: 'Est. time',
-  detailsCt: 'Distinct parts',
-  partsCt: 'Items',
-  routesheet: 'Route sheet',
-  sheetTitle: 'ROUTE SHEET',
-  scanInstr: 'Aim camera at an operation QR code on a printed route sheet',
-  cameraOff: 'Camera off',
-  enableCam: 'Enable camera',
-  scanMatch: 'Matched to operation:',
-  closeOpQ: 'Close this operation?',
-  confirm: 'Close',
-  cancel: 'Cancel',
-  noTask: 'QR not recognized',
-  log: 'Log',
-  signature: 'Signature',
-  qrCode: 'QR code',
-  preview: 'Preview',
-  printNow: 'Print',
-  manualEntry: 'Manual entry',
-  reset: 'Reset',
-  sheetSubtitle: 'for production order',
-  page: 'Page',
-  of: 'of',
-  signedBy: 'QC accepted:',
-  date: 'Date:',
-  operatorCol: 'Operator',
-  signatureCol: 'Mark',
-};
-
-function useStrings(lang) {
-  return lang === 'en' ? STR_EN : STR_RU;
-}
-
-// =======================================================
-// Sidebar
-// =======================================================
-function Sidebar({ route, setRoute, lang, counts }) {
-  const S = useStrings(lang);
-  const items = [
-    { id: 'dashboard', label: S.navDash, icon: 'gauge', badge: counts.inProgress },
-    { id: 'orders', label: S.navOrders, icon: 'orders', badge: counts.orders },
-    { id: 'library', label: S.navLibrary, icon: 'library' },
-    { id: 'scanner', label: S.navScan, icon: 'scan' },
-    { id: 'history', label: S.navHistory, icon: 'history' },
-  ];
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-head">
-        <div className="brand-mark">М</div>
-        <div>
-          <div className="brand-name">{lang === 'en' ? 'Маршрут' : 'Маршрут'}</div>
-          <div className="brand-sub">v 2.4 · build 0529</div>
-        </div>
-      </div>
-
-      <div className="sidebar-section">{S.navOps}</div>
-      <div className="sidebar-nav">
-        {items.slice(0, 4).map(it => (
-          <button
-            key={it.id}
-            className={'nav-item ' + (route === it.id ? 'active' : '')}
-            onClick={() => setRoute(it.id)}
-          >
-            <Icon name={it.icon} size={15} />
-            <span>{it.label}</span>
-            {it.badge != null && it.badge > 0 ? <span className="badge num">{it.badge}</span> : <span />}
-          </button>
-        ))}
-      </div>
-
-      <div className="sidebar-section">{S.navOps2}</div>
-      <div className="sidebar-nav">
-        {[items[4]].map(it => (
-          <button
-            key={it.id}
-            className={'nav-item ' + (route === it.id ? 'active' : '')}
-            onClick={() => setRoute(it.id)}
-          >
-            <Icon name={it.icon} size={15} />
-            <span>{it.label}</span>
-            <span />
-          </button>
-        ))}
-      </div>
-
-      <div className="sidebar-foot">
-        <div className="avatar">КП</div>
-        <div style={{ overflow: 'hidden' }}>
-          <div style={{ fontWeight: 500, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {lang === 'en' ? 'P. Kolesnikov' : 'Колесников П.А.'}
-          </div>
-          <div className="muted" style={{ fontSize: 10 }}>
-            {S.shift.split('·')[0].trim()}
-          </div>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-// =======================================================
-// Topbar
-// =======================================================
-function Topbar({ crumbs, actions, lang }) {
-  return (
-    <div className="topbar">
-      <div className="crumbs">
-        <Icon name="route" size={14} />
-        {crumbs.map((c, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <span className="sep">/</span>}
-            {i === crumbs.length - 1 ? <b>{c}</b> : <span>{c}</span>}
-          </React.Fragment>
-        ))}
-      </div>
-      {/* Заголовок для мобильного (crumbs скрыты) */}
-      <span className="topbar-title" style={{ display:'none' }}>
-        {crumbs[crumbs.length - 1] || 'Маршрут'}
-      </span>
-      <div className="topbar-spacer" />
-      <div className="topbar-actions" style={{ display:'flex',alignItems:'center',gap:6 }}>
-        {actions}
-      </div>
-    </div>
-  );
-}
-
-// =======================================================
-// Status pill helper
-// =======================================================
-function StatusPill({ status, lang }) {
-  const dict = lang === 'en' ? window.MaršrutData.STATUS_LABEL_EN : window.MaršrutData.STATUS_LABEL_RU;
-  const cls = status === 'done' ? 'done' : status === 'in_progress' ? 'prog' : 'wait';
-  return <span className={'pill ' + cls}><span className="dot" />{dict[status]}</span>;
-}
-
-// =======================================================
-// Dashboard
-// =======================================================
-// =======================================================
-// OrderPicker — умный список заказов с поиском и фильтром
-// =======================================================
-function OrderPicker({ orders, activeId, onSelect, onNew, lang }) {
-  const [query,     setQuery]  = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState('all');
-  const [open, setOpen]        = React.useState(false);
-
-  const STATUS_LBL  = { plan:'Планируется', in_work:'В работе', done:'Выполнен' };
-  const STATUS_CLS  = { plan:'wait', in_work:'prog', done:'done' };
-  const PRIORITY_LBL = { high:'Высокий', normal:'Нормальный', low:'Низкий' };
-  const PRIORITY_COLOR = { high:'var(--danger)', normal:'var(--fg-2)', low:'var(--fg-3)' };
-
-  const active = orders.find(o => o.id === activeId) || orders[0];
-
-  const filtered = orders.filter(o => {
-    const q = query.toLowerCase();
-    const matchQ = !q ||
-      o.number.toLowerCase().includes(q) ||
-      (o.customer||'').toLowerCase().includes(q) ||
-      (o.foreman||'').toLowerCase().includes(q);
-    const matchS = statusFilter === 'all' || o.status === statusFilter;
-    return matchQ && matchS;
-  });
-
-  // Закрываем при клике вне
-  const ref = React.useRef(null);
-  React.useEffect(() => {
-    if (!open) return;
-    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const inWork = orders.filter(o => o.status === 'in_work').length;
-  const inPlan = orders.filter(o => o.status === 'plan').length;
-
-  return (
-    <div ref={ref} style={{ position:'relative', marginBottom:12 }}>
-      {/* Кнопка-триггер */}
-      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-        <button onClick={() => setOpen(!open)}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 14px',
-            background:'var(--bg-1)', border:'1px solid var(--line-1)', borderRadius:10,
-            cursor:'pointer', fontFamily:'var(--ui-font)', fontSize:13, fontWeight:500,
-            color:'var(--fg-0)', transition:'all .15s', flex:1, maxWidth:400,
-            boxShadow: open ? '0 0 0 2px var(--accent)' : 'none' }}>
-          <Icon name="file" size={15} style={{ color:'var(--accent)', flexShrink:0 }}/>
-          <span className="mono" style={{ color:'var(--accent)', fontWeight:700 }}>
-            {active?.number || '—'}
-          </span>
-          <span style={{ color:'var(--fg-1)', fontSize:12, flex:1, textAlign:'left',
-            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-            {active?.customer}
-          </span>
-          {active && (
-            <span className={'pill ' + STATUS_CLS[active.status]} style={{ fontSize:10, flexShrink:0 }}>
-              <span className="dot"/>{STATUS_LBL[active.status]}
-            </span>
-          )}
-          <span style={{ color:'var(--fg-2)', fontSize:11, flexShrink:0 }}>
-            {orders.length} {lang === 'en' ? 'orders' : 'зак.'}
-          </span>
-          <Icon name="chevron-down" size={14} style={{ color:'var(--fg-2)', flexShrink:0,
-            transform: open ? 'rotate(180deg)' : 'none', transition:'transform .2s' }}/>
-        </button>
-        <button className="btn primary" onClick={onNew} style={{ flexShrink:0 }}>
-          <Icon name="plus" size={14}/>{lang === 'en' ? 'New' : 'Новый'}
-        </button>
-      </div>
-
-      {/* Dropdown */}
-      {open && (
-        <div className="order-picker-dropdown" style={{ position:'absolute', top:'calc(100% + 6px)', left:0, right:0, maxWidth:600,
-          background:'var(--bg-1)', border:'1px solid var(--line-1)', borderRadius:12,
-          boxShadow:'0 8px 32px rgba(0,0,0,.18)', zIndex:200, overflow:'hidden' }}>
-
-          {/* Поиск + фильтры */}
-          <div style={{ padding:'10px 12px', borderBottom:'1px solid var(--line-2)',
-            display:'flex', gap:8, alignItems:'center' }}>
-            <div style={{ position:'relative', flex:1 }}>
-              <Icon name="search" size={13} style={{ position:'absolute', left:9,
-                top:'50%', transform:'translateY(-50%)', color:'var(--fg-2)' }}/>
-              <input className="input" autoFocus
-                placeholder={lang === 'en' ? 'Search orders…' : 'Поиск по номеру или клиенту…'}
-                value={query} onChange={e => setQuery(e.target.value)}
-                style={{ paddingLeft:28, fontSize:12, height:30 }}/>
-            </div>
-            <div style={{ display:'flex', gap:4 }}>
-              {[['all','Все'], ['in_work','В работе'], ['plan','Планируется'], ['done','Выполнен']].map(([v,l]) => (
-                <button key={v} onClick={() => setStatusFilter(v)}
-                  style={{ padding:'4px 10px', borderRadius:6, border:'1px solid',
-                    fontSize:11, cursor:'pointer', fontFamily:'var(--ui-font)',
-                    background: statusFilter === v ? 'var(--accent)' : 'transparent',
-                    borderColor: statusFilter === v ? 'var(--accent)' : 'var(--line-1)',
-                    color: statusFilter === v ? '#fff' : 'var(--fg-1)',
-                    whiteSpace:'nowrap' }}>
-                  {l}
-                  {v !== 'all' && (
-                    <span style={{ marginLeft:4, opacity:.7 }}>
-                      {v === 'in_work' ? inWork : v === 'plan' ? inPlan : orders.filter(o=>o.status===v).length}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Список */}
-          <div style={{ maxHeight:320, overflowY:'auto' }}>
-            {filtered.length === 0 ? (
-              <div style={{ padding:24, textAlign:'center', color:'var(--fg-2)', fontSize:13 }}>
-                {lang === 'en' ? 'No orders found' : 'Заказы не найдены'}
-              </div>
-            ) : filtered.map(o => (
-              <div key={o.id} onClick={() => { onSelect(o.id); setOpen(false); }}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
-                  cursor:'pointer', borderBottom:'1px solid var(--line-2)',
-                  background: o.id === activeId ? 'var(--bg-hover)' : 'transparent',
-                  transition:'background .1s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                onMouseLeave={e => e.currentTarget.style.background = o.id === activeId ? 'var(--bg-hover)' : 'transparent'}>
-                {/* Цветная метка статуса */}
-                <div style={{ width:3, height:36, borderRadius:2, flexShrink:0,
-                  background: o.status==='done' ? 'var(--st-done-line)' :
-                               o.status==='in_work' ? 'var(--st-prog-line)' : 'var(--st-wait-line)' }}/>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span className="mono" style={{ fontWeight:700, color:'var(--accent)', fontSize:13 }}>
-                      {o.number}
-                    </span>
-                    {o.id === activeId && (
-                      <span style={{ fontSize:10, color:'var(--accent)', fontWeight:600 }}>← активный</span>
-                    )}
-                  </div>
-                  <div style={{ fontSize:12, color:'var(--fg-1)', marginTop:1,
-                    overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {o.customer}
-                    {o.foreman && <span style={{ color:'var(--fg-2)' }}> · {o.foreman}</span>}
-                  </div>
-                </div>
-                <div style={{ textAlign:'right', flexShrink:0 }}>
-                  <div style={{ fontSize:11, color: PRIORITY_COLOR[o.priority] || 'var(--fg-2)' }}>
-                    {PRIORITY_LBL[o.priority] || ''}
-                  </div>
-                  <div style={{ fontSize:11, color:'var(--fg-2)', marginTop:2 }}>
-                    {o.dueDate || o.due_date}
-                  </div>
-                </div>
-                <span className={'pill ' + STATUS_CLS[o.status]} style={{ fontSize:10, flexShrink:0 }}>
-                  <span className="dot"/>{STATUS_LBL[o.status]}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Футер */}
-          <div style={{ padding:'8px 14px', borderTop:'1px solid var(--line-2)',
-            display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--fg-2)' }}>
-            <span>{filtered.length} из {orders.length} заказов</span>
-            <span>{inWork} в работе · {inPlan} планируется</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder }) {
   const S = useStrings(lang);
   const [activeId, setActiveId] = React.useState(data.orders[0]?.id);
@@ -3379,8 +2412,13 @@ function DetailBoardGroup({ detail, tasks, done, total, qty, lang, onCloseTask }
               <span className="num">{t.completed}/{t.planned}</span>
               <span className="bar"><span className="fill" style={{ width: (t.completed / t.planned) * 100 + '%' }} /></span>
             </div>
-            <div style={{ textAlign: 'center', fontFamily: 'var(--mono-font)', fontSize: 11, color: 'var(--fg-2)' }}>
-              {t.time}'
+            <div style={{ textAlign:'center', fontSize:11, color:'var(--fg-2)', fontFamily:'var(--mono-font)' }}>
+              <div>{t.time}'</div>
+              {t.startedAt && t.status === 'in_progress' && (
+                <div style={{ fontSize:9, color:'var(--accent)' }}>
+                  {Math.round((Date.now() - new Date(t.startedAt).getTime()) / 60000)}м
+                </div>
+              )}
             </div>
             <div style={{ fontSize: 11, color: 'var(--fg-1)' }}>{t.operator || <span className="muted">—</span>}</div>
             <div className="actions">
@@ -3799,82 +2837,121 @@ function RouteSheetView({ data, tasks, lang, qrSize, onClose, onScanQR }) {
     tasks: tasks.filter(t => t.orderId === order.id && t.detailId === it.detailId),
   }));
 
-  // Печать: открываем новое окно с чистым HTML маршрутного листа
+  // Печать: компактный маршрутный лист на А4
   function handlePrint() {
-    const printWin = window.open('', '_blank', 'width=900,height=700');
+    const printWin = window.open('', '_blank', 'width=820,height=1000');
     if (!printWin) { window.print(); return; }
 
-    // Генерируем HTML строк таблицы с QR в виде base64 SVG
     const rowsHTML = items.map((it, idx) => {
+      if (!it.det) return '';
       const opsRows = it.tasks.map(t => {
-        const qrData = window.generateQrSvg(t.qrText, 64);
-        const qrSVG = qrData ? `<svg width="64" height="64" viewBox="0 0 64 64" shape-rendering="crispEdges">
-          <rect width="64" height="64" fill="#fff"/>
-          ${qrData.cells.map(c => `<rect x="${c.x.toFixed(1)}" y="${c.y.toFixed(1)}" width="${c.w.toFixed(1)}" height="${c.h.toFixed(1)}" fill="#000"/>`).join('')}
-        </svg>` : '';
-        return `<tr>
-          <td style="font-family:monospace;font-weight:700;padding:6px 8px;border-bottom:1px solid #e5dec8">${String(t.opNum).padStart(3,'0')}</td>
-          <td style="padding:6px 8px;border-bottom:1px solid #e5dec8"><b>${t.opName}</b></td>
-          <td style="font-family:monospace;font-size:9pt;padding:6px 8px;border-bottom:1px solid #e5dec8">${t.workCenter}</td>
-          <td style="font-family:monospace;font-weight:700;padding:6px 8px;border-bottom:1px solid #e5dec8;text-align:center">${t.planned}</td>
-          <td style="text-align:center;padding:4px;border-bottom:1px solid #e5dec8;width:80px">
-            ${qrSVG}
-            <div style="font-size:6pt;font-family:monospace;color:#7a715b;margin-top:2px">${t.qrText}</div>
+        const qrData = window.generateQrSvg ? window.generateQrSvg(t.qrText, 48) : null;
+        const qrSVG = qrData
+          ? `<svg width="48" height="48" viewBox="0 0 48 48" shape-rendering="crispEdges" style="display:block">
+              <rect width="48" height="48" fill="#fff"/>
+              ${qrData.cells.map(c => `<rect x="${c.x.toFixed(1)}" y="${c.y.toFixed(1)}" width="${c.w.toFixed(1)}" height="${c.h.toFixed(1)}" fill="#000"/>`).join('')}
+             </svg>`
+          : `<div style="width:48px;height:48px;border:1px solid #ccc;font-size:6pt;color:#999;display:flex;align-items:center;justify-content:center">${t.qrText.slice(-8)}</div>`;
+
+        const rowBg = t.status === 'done' ? '#f0faf0' : t.status === 'in_progress' ? '#fff8f0' : '#fff';
+        const statusIcon = t.status === 'done' ? '✓' : t.status === 'in_progress' ? '▶' : '';
+
+        return `<tr style="background:${rowBg}">
+          <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-family:monospace;font-weight:700;font-size:9pt;width:30px;text-align:center">${String(t.opNum).padStart(3,'0')}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:9pt"><b>${t.opName}</b></td>
+          <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:8pt;font-family:monospace;color:#444;width:110px">${t.workCenter}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:9pt;text-align:center;width:30px;font-family:monospace;font-weight:700">${t.planned}</td>
+          <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:7pt;font-family:monospace;color:#666;text-align:center;width:35px">${t.time}'</td>
+          <td style="padding:2px 4px;border-bottom:1px solid #e8e0d0;text-align:center;width:56px">${qrSVG}<div style="font-size:5pt;font-family:monospace;color:#999;margin-top:1px;word-break:break-all">${t.qrText.slice(-10)}</div></td>
+          <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:8pt;text-align:center;width:18px;color:${t.status==='done'?'#2d7a2d':'#888'}">${statusIcon}</td>
+          <td style="border-bottom:1px solid #e8e0d0;border-left:1px dashed #ccc;width:80px;padding:2px 4px">
+            <div style="font-size:7pt;color:#999">исполнитель:</div>
+            <div style="font-size:8pt;color:#555">${t.operator||''}</div>
           </td>
-          <td style="border-bottom:1px solid #e5dec8;border-left:1px dashed #b0a994;width:100px"></td>
         </tr>`;
       }).join('');
 
-      return `<div style="margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid #14110b;padding-bottom:6px;margin-bottom:8px">
-          <div style="font-size:14pt;font-weight:700">${idx+1}. ${it.det.name}</div>
-          <div style="font-size:9pt;color:#5a5240;font-family:monospace">${it.det.code} · Кол-во: <b>${it.quantity}</b> ${it.det.unit} · ${it.det.drawing||''}</div>
+      const detDone  = it.tasks.filter(t=>t.status==='done').length;
+      const detTotal = it.tasks.length;
+      const detPct   = detTotal > 0 ? Math.round(detDone*100/detTotal) : 0;
+
+      return `<div style="margin-bottom:8px;page-break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    background:#f5efe0;padding:4px 8px;border-left:3px solid #c07820;margin-bottom:0">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:10pt;font-weight:700">${idx+1}. ${it.det.name}</span>
+            <span style="font-family:monospace;font-size:8pt;color:#666">${it.det.code}</span>
+            <span style="font-size:8pt;color:#555">чертёж: <b>${it.det.drawing||'—'}</b></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:9pt">кол-во: <b>${it.quantity} ${it.det.unit}</b></span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <div style="width:50px;height:5px;background:#ddd;border-radius:3px;overflow:hidden">
+                <div style="width:${detPct}%;height:100%;background:#2d7a2d;border-radius:3px"></div>
+              </div>
+              <span style="font-size:8pt;font-family:monospace">${detDone}/${detTotal}</span>
+            </div>
+          </div>
         </div>
-        <table style="width:100%;border-collapse:collapse;font-size:10pt">
-          <thead><tr style="background:#f7f1e0">
-            <th style="text-align:left;padding:5px 8px;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #b0a994;width:38px">№</th>
-            <th style="text-align:left;padding:5px 8px;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #b0a994">Операция</th>
-            <th style="text-align:left;padding:5px 8px;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #b0a994;width:130px">Раб. центр</th>
-            <th style="text-align:left;padding:5px 8px;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #b0a994;width:45px">Кол.</th>
-            <th style="text-align:left;padding:5px 8px;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #b0a994;width:80px">QR</th>
-            <th style="text-align:left;padding:5px 8px;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #b0a994;width:100px">Подпись</th>
+        <table style="width:100%;border-collapse:collapse;font-size:9pt">
+          <thead><tr style="background:#ede5d0">
+            <th style="padding:3px 6px;text-align:center;font-size:7pt;border-bottom:2px solid #c07820;width:30px">№</th>
+            <th style="padding:3px 6px;text-align:left;font-size:7pt;border-bottom:2px solid #c07820">ОПЕРАЦИЯ</th>
+            <th style="padding:3px 6px;text-align:left;font-size:7pt;border-bottom:2px solid #c07820;width:110px">РАБ. ЦЕНТР</th>
+            <th style="padding:3px 6px;text-align:center;font-size:7pt;border-bottom:2px solid #c07820;width:30px">КОЛ</th>
+            <th style="padding:3px 6px;text-align:center;font-size:7pt;border-bottom:2px solid #c07820;width:35px">МИН</th>
+            <th style="padding:3px 6px;text-align:center;font-size:7pt;border-bottom:2px solid #c07820;width:56px">QR</th>
+            <th style="padding:3px 6px;text-align:center;font-size:7pt;border-bottom:2px solid #c07820;width:18px">✓</th>
+            <th style="padding:3px 6px;text-align:left;font-size:7pt;border-bottom:2px solid #c07820;width:80px;border-left:1px dashed #ccc">ИСПОЛНИТЕЛЬ</th>
           </tr></thead>
           <tbody>${opsRows}</tbody>
         </table>
       </div>`;
     }).join('');
 
+    const allT    = items.flatMap(it=>it.tasks);
+    const doneAll = allT.filter(t=>t.status==='done').length;
+    const pctAll  = allT.length > 0 ? Math.round(doneAll*100/allT.length) : 0;
+
     printWin.document.write(`<!DOCTYPE html><html><head>
       <meta charset="utf-8">
-      <title>Маршрутный лист ${order.number}</title>
+      <title>МЛ ${order.number}</title>
       <style>
-        @page { size: A4 portrait; margin: 12mm 15mm; }
-        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; font-size: 10pt; color: #14110b; background: #fff; margin: 0; }
+        @page { size: A4 portrait; margin: 8mm 10mm; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: Arial, sans-serif; font-size: 9pt; color: #14110b; }
         @media print { body { margin: 0; } }
       </style>
     </head><body>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #14110b;padding-bottom:12px;margin-bottom:14px">
-        <div>
-          <div style="font-size:8pt;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#5a5240">МАРШРУТНЫЙ ЛИСТ</div>
-          <div style="font-size:22pt;font-weight:700;margin-top:4px">№ ${order.number}</div>
-          <div style="font-size:9pt;color:#5a5240;margin-top:4px">К заказу на производство</div>
-        </div>
-        <table style="font-size:9pt;border-collapse:collapse">
-          <tr><td style="color:#6e6450;font-weight:500;padding:2px 10px 2px 0">Получатель:</td><td>${order.customer}</td></tr>
-          <tr><td style="color:#6e6450;font-weight:500;padding:2px 10px 2px 0">Ст. мастер:</td><td>${order.foreman||'—'}</td></tr>
-          <tr><td style="color:#6e6450;font-weight:500;padding:2px 10px 2px 0">Создан:</td><td style="font-family:monospace">${order.createdAt}</td></tr>
-          <tr><td style="color:#6e6450;font-weight:500;padding:2px 10px 2px 0">Срок:</td><td style="font-family:monospace">${order.dueDate}</td></tr>
-          <tr><td style="color:#6e6450;font-weight:500;padding:2px 10px 2px 0">Стр.:</td><td style="font-family:monospace">1 из 1</td></tr>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                border-bottom:2px solid #14110b;padding-bottom:6px;margin-bottom:8px">
+      <div>
+        <div style="font-size:7pt;font-weight:700;letter-spacing:.2em;color:#7a6840;text-transform:uppercase">Маршрутный лист</div>
+        <div style="font-size:18pt;font-weight:700;line-height:1;margin:2px 0">№ ${order.number}</div>
+        <div style="font-size:8pt;color:#7a6840">к заказу на производство</div>
+      </div>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <table style="font-size:8pt;border-collapse:collapse">
+          <tr><td style="color:#888;padding:1px 8px 1px 0">Получатель:</td><td style="font-weight:500">${order.customer}</td></tr>
+          <tr><td style="color:#888;padding:1px 8px 1px 0">Ст. мастер:</td><td>${order.foreman||'—'}</td></tr>
+          <tr><td style="color:#888;padding:1px 8px 1px 0">Создан:</td><td style="font-family:monospace">${order.createdAt}</td></tr>
+          <tr><td style="color:#888;padding:1px 8px 1px 0">Срок:</td><td style="font-family:monospace;font-weight:500">${order.dueDate}</td></tr>
         </table>
+        <div style="text-align:center;min-width:60px">
+          <div style="font-size:7pt;color:#888;margin-bottom:2px">прогресс</div>
+          <div style="font-size:14pt;font-weight:700">${pctAll}%</div>
+          <div style="font-size:7pt;color:#888">${doneAll}/${allT.length} оп.</div>
+        </div>
       </div>
-      ${rowsHTML}
-      <div style="display:flex;justify-content:space-between;margin-top:18px;padding-top:10px;border-top:1px solid #b0a994;font-size:9pt">
-        <span>Принял ________________________</span>
-        <span>Дата ____________</span>
-        <span style="font-family:monospace">${order.number} · ${new Date().toISOString().slice(0,10)}</span>
-      </div>
-      <script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; }<\/script>
+    </div>
+    ${rowsHTML}
+    <div style="display:flex;justify-content:space-between;border-top:1px solid #ccc;
+                padding-top:4px;font-size:7pt;color:#888;margin-top:6px">
+      <span>Принял: _____________________</span>
+      <span>Дата: __________</span>
+      <span style="font-family:monospace">${order.number} · ${new Date().toLocaleDateString('ru-RU')}</span>
+    </div>
+    <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
     </body></html>`);
     printWin.document.close();
   }
@@ -4023,7 +3100,57 @@ function RouteSheetView({ data, tasks, lang, qrSize, onClose, onScanQR }) {
     </>
   );
 }
-
+{
+  const S = useStrings(lang);
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">{S.navHistory}</h1>
+          <div className="page-sub">Аудит всех сканирований QR-кодов · {scanLog.length} записей</div>
+        </div>
+      </div>
+      <div className="tbl-wrap">
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Время</th>
+              <th>Деталь</th>
+              <th>Операция</th>
+              <th>Оператор</th>
+              <th className="num-col">Кол.</th>
+              <th className="num-col hide-mobile">Факт, мин</th>
+              <th className="hide-mobile">Комментарий</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            {scanLog.map((s, i) => (
+              <tr key={i} className="row-hover">
+                <td className="mono-col" style={{ fontSize:11 }}>{s.ts}</td>
+                <td className="mono-col" style={{ color:'var(--accent)', fontSize:12 }}>{s.detail}</td>
+                <td style={{ fontSize:12 }}><b>{s.op}</b></td>
+                <td style={{ fontSize:12 }}>{s.operator}</td>
+                <td className="num-col num">{s.quantity}</td>
+                <td className="num-col num hide-mobile">
+                  {s.actualTime ? <span>{s.actualTime}</span> : '—'}
+                </td>
+                <td className="hide-mobile" style={{ fontSize:11, color:'var(--fg-1)', maxWidth:200,
+                  overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  {s.comment || <span style={{ color:'var(--fg-3)' }}>—</span>}
+                </td>
+                <td><span className="pill done"><Icon name="check" size={11}/>закрыто</span></td>
+              </tr>
+            ))}
+            {scanLog.length === 0 && (
+              <tr><td colSpan="8"><div className="empty-state" style={{ background:'transparent', border:0 }}>—</div></td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
 // =======================================================
 // Scan history page
 // =======================================================
@@ -4034,7 +3161,7 @@ function HistoryView({ data, tasks, scanLog, lang }) {
       <div className="page-head">
         <div>
           <h1 className="page-title">{S.navHistory}</h1>
-          <div className="page-sub">{lang === 'en' ? 'Audit trail of all QR scans' : 'Аудит всех сканирований QR-кодов'}</div>
+          <div className="page-sub">{lang === 'en' ? 'Audit trail of all QR scans' : 'Аудит всех сканирований QR-кодов'} · {scanLog.length} записей</div>
         </div>
       </div>
       <div className="tbl-wrap">
@@ -4042,28 +3169,39 @@ function HistoryView({ data, tasks, scanLog, lang }) {
           <thead>
             <tr>
               <th>{lang === 'en' ? 'Timestamp' : 'Время'}</th>
-              <th>{S.qrCode}</th>
               <th>{S.detail}</th>
               <th>{S.operation}</th>
               <th>{S.operator}</th>
-              <th>{S.qtyShort}</th>
+              <th className="num-col">{S.qtyShort}</th>
+              <th className="num-col hide-mobile">Факт, мин</th>
+              <th className="hide-mobile">Комментарий</th>
               <th>{S.status}</th>
             </tr>
           </thead>
           <tbody>
             {scanLog.map((s, i) => (
               <tr key={i} className="row-hover">
-                <td className="mono-col">{s.ts}</td>
-                <td className="mono-col" style={{ color: 'var(--accent)' }}>{s.qr}</td>
-                <td className="mono-col">{s.detail}</td>
-                <td><b>{s.op}</b></td>
-                <td>{s.operator}</td>
+                <td className="mono-col" style={{ fontSize:11 }}>{s.ts}</td>
+                <td className="mono-col" style={{ color:'var(--accent)', fontSize:12 }}>{s.detail}</td>
+                <td style={{ fontSize:12 }}><b>{s.op}</b></td>
+                <td style={{ fontSize:12 }}>{s.operator}</td>
                 <td className="num-col num">{s.quantity}</td>
-                <td><span className="pill done"><Icon name="check" size={11} />{lang === 'en' ? 'closed' : 'закрыто'}</span></td>
+                <td className="num-col num hide-mobile">
+                  {s.actualTime ? (
+                    <span style={{ color: s.actualTime > 0 ? 'var(--fg-1)' : 'var(--fg-2)' }}>
+                      {s.actualTime}
+                    </span>
+                  ) : '—'}
+                </td>
+                <td className="hide-mobile" style={{ fontSize:11, color:'var(--fg-1)', maxWidth:200,
+                  overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  {s.comment || <span style={{ color:'var(--fg-3)' }}>—</span>}
+                </td>
+                <td><span className="pill done"><Icon name="check" size={11}/>{lang === 'en' ? 'closed' : 'закрыто'}</span></td>
               </tr>
             ))}
             {scanLog.length === 0 && (
-              <tr><td colSpan="7"><div className="empty-state" style={{ background: 'transparent', border: 0 }}>—</div></td></tr>
+              <tr><td colSpan="8"><div className="empty-state" style={{ background:'transparent', border:0 }}>—</div></td></tr>
             )}
           </tbody>
         </table>
@@ -4071,68 +3209,687 @@ function HistoryView({ data, tasks, scanLog, lang }) {
     </>
   );
 }
+{
+  const [selId,    setSelId]    = React.useState(workshops[0]?.id || null);
+  const [loadData, setLoadData] = React.useState(null);
+  const [days,     setDays]     = React.useState(7);
+  const [loading,  setLoading]  = React.useState(false);
 
-Object.assign(window, {
-  Sidebar, Topbar, Dashboard, Library, OrderBuilder, RouteSheetView, HistoryView,
-  ReportView, ReportsDropdown, OrdersListView, OrderPicker, StatusPill, useStrings,
-});
-
-
-// =======================================================
-// ReportsDropdown — выпадающий список отчётов в Topbar
-// =======================================================
-function ReportsDropdown({ onNavigate, lang }) {
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef(null);
+  const selected = workshops.find(w => w.id === selId);
 
   React.useEffect(() => {
-    if (!open) return;
-    function h(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
+    if (!selId) return;
+    setLoading(true);
+    fetch('/api/workshops/' + selId + '/load?days=' + days, {
+      headers: { Authorization: 'Bearer ' + window.__authToken }
+    })
+    .then(r => r.json())
+    .then(d => { setLoadData(d); setLoading(false); })
+    .catch(() => setLoading(false));
+  }, [selId, days]);
 
-  const items = [
-    { id: 'orders-list', icon: 'file',    label: 'Все заказы',           desc: 'Список с фильтрами и поиском' },
-    { id: 'report',      icon: 'chart',   label: 'Общий отчёт',          desc: 'Прогресс, метрики, статусы' },
-    { id: 'history',     icon: 'clock',   label: 'Журнал сканирований',  desc: 'Аудит ОТК по QR-кодам' },
-  ];
+  // Задания цеха из frontend state (для живого обновления)
+  const workshopTasks = React.useMemo(() =>
+    tasks.filter(t => t.workshopId == selId || String(t.workshopId) === String(selId)),
+    [tasks, selId]
+  );
+
+  const wStats = React.useMemo(() => {
+    const total = workshopTasks.length;
+    const done  = workshopTasks.filter(t=>t.status==='done').length;
+    const prog  = workshopTasks.filter(t=>t.status==='in_progress').length;
+    const pct   = total > 0 ? Math.round(done*100/total) : 0;
+    const planMin = workshopTasks.reduce((s,t) => s + t.time * t.planned, 0);
+    return { total, done, prog, pct, planMin };
+  }, [workshopTasks]);
+
+  // Группировка по рабочим центрам из frontend state
+  const centerGroups = React.useMemo(() => {
+    const map = {};
+    workshopTasks.forEach(t => {
+      if (!map[t.workCenter]) map[t.workCenter] = { name: t.workCenter, tasks: [] };
+      map[t.workCenter].tasks.push(t);
+    });
+    return Object.values(map).map(g => {
+      const total = g.tasks.length;
+      const done  = g.tasks.filter(t=>t.status==='done').length;
+      const prog  = g.tasks.filter(t=>t.status==='in_progress').length;
+      const pct   = total > 0 ? Math.round(done*100/total) : 0;
+      const planMin = g.tasks.reduce((s,t) => s + t.time * t.planned, 0);
+      const doneMin = g.tasks.filter(t=>t.status==='done').reduce((s,t) => s + t.time * t.completed, 0);
+      return { ...g, total, done, prog, pct, planMin, doneMin };
+    }).sort((a,b) => b.total - a.total);
+  }, [workshopTasks]);
+
+  if (workshops.length === 0) return (
+    <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>
+      <p style={{ marginBottom:16 }}>Нет цехов. Добавьте первый цех.</p>
+      <button className="btn primary" onClick={onManage}><Icon name="plus" size={14}/>Добавить цех</button>
+    </div>
+  );
 
   return (
-    <div ref={ref} style={{ position:'relative' }}>
-      <button className="btn" onClick={() => setOpen(!open)}>
-        <Icon name="chart" size={14}/>
-        Отчёты
-        <Icon name="chevron-down" size={12} style={{ marginLeft:2,
-          transform: open ? 'rotate(180deg)' : 'none', transition:'transform .2s' }}/>
-      </button>
-      {open && (
-        <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, width:260,
-          background:'var(--bg-1)', border:'1px solid var(--line-1)', borderRadius:10,
-          boxShadow:'0 8px 24px rgba(0,0,0,.18)', zIndex:500, overflow:'hidden' }}>
-          {items.map(item => (
-            <button key={item.id}
-              onClick={() => { onNavigate(item.id); setOpen(false); }}
-              style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'10px 14px',
-                background:'transparent', border:'none', cursor:'pointer', textAlign:'left',
-                borderBottom:'1px solid var(--line-2)', fontFamily:'var(--ui-font)' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <div style={{ width:30, height:30, borderRadius:7, background:'var(--bg-3)',
-                display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <Icon name={item.icon} size={15} style={{ color:'var(--accent)' }}/>
-              </div>
-              <div>
-                <div style={{ fontSize:13, fontWeight:500, color:'var(--fg-0)' }}>{item.label}</div>
-                <div style={{ fontSize:11, color:'var(--fg-2)', marginTop:1 }}>{item.desc}</div>
-              </div>
-            </button>
-          ))}
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Загрузка цехов</h1>
+          <div className="page-sub">{workshops.length} цехов · {wStats.prog} операций в работе</div>
         </div>
+        <div className="row">
+          <div style={{ display:'flex', gap:4 }}>
+            {[7,14,30].map(d => (
+              <button key={d} onClick={()=>setDays(d)}
+                style={{ padding:'6px 10px', borderRadius:7, border:'1px solid', fontSize:12,
+                  cursor:'pointer', fontFamily:'var(--ui-font)',
+                  background: days===d ? 'var(--accent)' : 'var(--bg-1)',
+                  borderColor: days===d ? 'var(--accent)' : 'var(--line-1)',
+                  color: days===d ? '#fff' : 'var(--fg-1)' }}>
+                {d} дн.
+              </button>
+            ))}
+          </div>
+          <button className="btn" onClick={onManage}><Icon name="cog" size={14}/>Управление</button>
+        </div>
+      </div>
+
+      {/* Список цехов */}
+      <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        {workshops.map(w => (
+          <button key={w.id} onClick={() => setSelId(w.id)}
+            style={{ padding:'8px 14px', borderRadius:10, border:'1px solid', cursor:'pointer',
+              fontFamily:'var(--ui-font)', fontSize:13,
+              background: selId===w.id ? 'var(--accent)' : 'var(--bg-1)',
+              borderColor: selId===w.id ? 'var(--accent)' : 'var(--line-1)',
+              color: selId===w.id ? '#fff' : 'var(--fg-0)',
+              opacity: w.is_active ? 1 : .5 }}>
+            <span style={{ fontWeight:600 }}>{w.code}</span>
+            <span style={{ marginLeft:6, fontSize:11, opacity:.8 }}>{w.name.split('—')[0].trim()}</span>
+          </button>
+        ))}
+      </div>
+
+      {selected && (
+        <>
+          {/* KPI цеха */}
+          <div className="grid-4" style={{ marginBottom:16 }}>
+            <div className="kpi">
+              <div className="kpi-label">Всего операций</div>
+              <div className="kpi-value num">{wStats.total}</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">В работе</div>
+              <div className="kpi-value num" style={{ color:'var(--accent)' }}>{wStats.prog}</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">Выполнено</div>
+              <div className="kpi-value num">{wStats.done}<span className="unit">/{wStats.total}</span></div>
+              <div className="kpi-meta">{wStats.pct}%</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">Трудоёмкость</div>
+              <div className="kpi-value num">{Math.round(wStats.planMin/60)}<span className="unit">ч</span></div>
+              <div className="kpi-meta">{wStats.planMin % 60} мин</div>
+            </div>
+          </div>
+
+          {/* Загрузка рабочих центров */}
+          <div className="card" style={{ padding:'16px 18px', marginBottom:14 }}>
+            <div className="subhead" style={{ marginTop:0 }}>Рабочие центры — {selected.name.split('—')[1]?.trim() || selected.name}</div>
+            {centerGroups.length === 0 ? (
+              <div style={{ padding:'24px 0', textAlign:'center', color:'var(--fg-2)', fontSize:13 }}>
+                Нет заданий в этом цехе
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:12 }}>
+                {centerGroups.map(g => (
+                  <div key={g.name}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
+                      <span style={{ fontSize:13, fontWeight:500, color:'var(--fg-0)', minWidth:120 }}>
+                        {g.name}
+                      </span>
+                      <div style={{ flex:1, height:16, background:'var(--bg-3)', borderRadius:4, overflow:'hidden', position:'relative' }}>
+                        {/* Выполнено */}
+                        <div style={{ position:'absolute', left:0, top:0, height:'100%', width:g.pct+'%',
+                          background:'var(--st-done-line)', opacity:.85, borderRadius:4 }}/>
+                        {/* В работе */}
+                        <div style={{ position:'absolute', left:g.pct+'%', top:0, height:'100%',
+                          width: (g.total > 0 ? Math.round(g.prog*100/g.total) : 0)+'%',
+                          background:'var(--accent)', opacity:.6 }}/>
+                        {g.pct > 8 && (
+                          <span style={{ position:'absolute', left:6, top:0, lineHeight:'16px',
+                            fontSize:10, color:'#fff', fontWeight:600 }}>{g.pct}%</span>
+                        )}
+                      </div>
+                      <div style={{ display:'flex', gap:10, fontSize:11, color:'var(--fg-2)', minWidth:160, justifyContent:'flex-end' }}>
+                        <span><b style={{ color:'var(--fg-0)' }}>{g.done}</b>/{g.total}</span>
+                        {g.prog > 0 && <span style={{ color:'var(--accent)' }}>{g.prog} в раб.</span>}
+                        <span className="num">{Math.round(g.planMin/60)}ч</span>
+                      </div>
+                    </div>
+                    {/* Нормо-часы план/факт */}
+                    {g.doneMin > 0 && (
+                      <div style={{ display:'flex', gap:16, fontSize:10, color:'var(--fg-2)', marginLeft:130, marginTop:2 }}>
+                        <span>план: <b className="num">{Math.round(g.planMin/60)}ч {g.planMin%60}м</b></span>
+                        <span>факт: <b className="num" style={{ color: g.doneMin > g.planMin ? 'var(--danger)' : 'var(--st-done-line)' }}>
+                          {Math.round(g.doneMin/60)}ч {g.doneMin%60}м
+                        </b></span>
+                        {g.planMin > 0 && (
+                          <span>откл: <b className="num" style={{ color: g.doneMin > g.planMin ? 'var(--danger)' : 'var(--st-done-line)' }}>
+                            {g.doneMin > g.planMin ? '+' : ''}{Math.round((g.doneMin - g.planMin)/60*10)/10}ч
+                          </b></span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
+    </>
+  );
+}
+{
+  const [list, setList]   = React.useState(workshops);
+  const [editing, setEditing] = React.useState(null);
+  const [form, setForm]   = React.useState({ code:'', name:'', description:'', is_active:1 });
+  const [saving, setSaving] = React.useState(false);
+
+  async function save() {
+    if (!form.code || !form.name) return;
+    setSaving(true);
+    try {
+      let res;
+      if (editing?.id) {
+        res = await fetch('/api/workshops/' + editing.id, {
+          method: 'PUT',
+          headers: { 'Content-Type':'application/json', Authorization:'Bearer '+window.__authToken },
+          body: JSON.stringify(form),
+        }).then(r=>r.json());
+        setList(prev => prev.map(w => w.id === editing.id ? res : w));
+      } else {
+        res = await fetch('/api/workshops', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', Authorization:'Bearer '+window.__authToken },
+          body: JSON.stringify(form),
+        }).then(r=>r.json());
+        setList(prev => [...prev, res]);
+      }
+      setEditing(null);
+      setForm({ code:'', name:'', description:'', is_active:1 });
+      onSaved(list);
+    } catch(e) { alert('Ошибка: ' + e.message); }
+    setSaving(false);
+  }
+
+  async function del(id) {
+    if (!window.confirm('Удалить цех?')) return;
+    await fetch('/api/workshops/' + id, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + window.__authToken }
+    });
+    setList(prev => prev.filter(w => w.id !== id));
+    onSaved(list.filter(w => w.id !== id));
+  }
+
+  function edit(w) {
+    setEditing(w);
+    setForm({ code: w.code, name: w.name, description: w.description||'', is_active: w.is_active });
+  }
+
+  return (
+    <div className="modal-back" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:560 }}>
+        <div className="modal-head">
+          <b>Управление цехами</b>
+          <button className="icon-btn" onClick={onClose}><Icon name="x" size={16}/></button>
+        </div>
+        <div className="modal-body">
+          {/* Список цехов */}
+          <div style={{ marginBottom:16 }}>
+            {list.map(w => (
+              <div key={w.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0',
+                borderBottom:'1px solid var(--line-2)', opacity: w.is_active ? 1 : .5 }}>
+                <span className="mono" style={{ fontSize:12, color:'var(--accent)', width:60 }}>{w.code}</span>
+                <span style={{ flex:1, fontSize:13 }}>{w.name}</span>
+                <button className="icon-btn" onClick={()=>edit(w)}><Icon name="edit" size={14}/></button>
+                <button className="icon-btn" style={{ color:'var(--danger)' }} onClick={()=>del(w.id)}>
+                  <Icon name="trash" size={14}/>
+                </button>
+              </div>
+            ))}
+            {list.length === 0 && <div style={{ color:'var(--fg-2)', fontSize:13, padding:'8px 0' }}>Нет цехов</div>}
+          </div>
+
+          {/* Форма добавления/редактирования */}
+          <div className="subhead">{editing ? 'Редактировать' : 'Добавить цех'}</div>
+          <div style={{ display:'grid', gridTemplateColumns:'100px 1fr', gap:8, marginTop:8 }}>
+            <div className="field">
+              <span className="field-label">Код</span>
+              <input className="input" value={form.code} onChange={e=>setForm(p=>({...p,code:e.target.value}))} placeholder="ЦЕХ1"/>
+            </div>
+            <div className="field">
+              <span className="field-label">Название</span>
+              <input className="input" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} placeholder="Цех №1 — Механообработка"/>
+            </div>
+          </div>
+          <div className="field" style={{ marginTop:8 }}>
+            <span className="field-label">Описание (необязательно)</span>
+            <input className="input" value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))} placeholder="Токарные, фрезерные работы"/>
+          </div>
+        </div>
+        <div className="modal-foot">
+          {editing && <button className="btn" onClick={()=>{setEditing(null);setForm({code:'',name:'',description:'',is_active:1});}}>Отмена</button>}
+          <button className="btn primary" onClick={save} disabled={saving}>
+            {saving ? 'Сохранение…' : (editing ? 'Сохранить' : '+ Добавить')}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
+
+
+
+
+// =======================================================
+// WorkshopView — загрузка цехов и оборудования
+// =======================================================
+function WorkshopView({ workshops, tasks, lang, onManage }) {
+  const [selId,    setSelId]    = React.useState(workshops[0]?.id || null);
+  const [loadData, setLoadData] = React.useState(null);
+  const [days,     setDays]     = React.useState(7);
+  const [loading,  setLoading]  = React.useState(false);
+
+  const selected = workshops.find(w => w.id === selId);
+
+  React.useEffect(() => {
+    if (!selId) return;
+    setLoading(true);
+    fetch('/api/workshops/' + selId + '/load?days=' + days, {
+      headers: { Authorization: 'Bearer ' + window.__authToken }
+    })
+    .then(r => r.json())
+    .then(d => { setLoadData(d); setLoading(false); })
+    .catch(() => setLoading(false));
+  }, [selId, days]);
+
+  // Задания цеха из frontend state (для живого обновления)
+  const workshopTasks = React.useMemo(() =>
+    tasks.filter(t => t.workshopId == selId || String(t.workshopId) === String(selId)),
+    [tasks, selId]
+  );
+
+  const wStats = React.useMemo(() => {
+    const total = workshopTasks.length;
+    const done  = workshopTasks.filter(t=>t.status==='done').length;
+    const prog  = workshopTasks.filter(t=>t.status==='in_progress').length;
+    const pct   = total > 0 ? Math.round(done*100/total) : 0;
+    const planMin = workshopTasks.reduce((s,t) => s + t.time * t.planned, 0);
+    return { total, done, prog, pct, planMin };
+  }, [workshopTasks]);
+
+  // Группировка по рабочим центрам из frontend state
+  const centerGroups = React.useMemo(() => {
+    const map = {};
+    workshopTasks.forEach(t => {
+      if (!map[t.workCenter]) map[t.workCenter] = { name: t.workCenter, tasks: [] };
+      map[t.workCenter].tasks.push(t);
+    });
+    return Object.values(map).map(g => {
+      const total = g.tasks.length;
+      const done  = g.tasks.filter(t=>t.status==='done').length;
+      const prog  = g.tasks.filter(t=>t.status==='in_progress').length;
+      const pct   = total > 0 ? Math.round(done*100/total) : 0;
+      const planMin = g.tasks.reduce((s,t) => s + t.time * t.planned, 0);
+      const doneMin = g.tasks.filter(t=>t.status==='done').reduce((s,t) => s + t.time * t.completed, 0);
+      return { ...g, total, done, prog, pct, planMin, doneMin };
+    }).sort((a,b) => b.total - a.total);
+  }, [workshopTasks]);
+
+  if (workshops.length === 0) return (
+    <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>
+      <p style={{ marginBottom:16 }}>Нет цехов. Добавьте первый цех.</p>
+      <button className="btn primary" onClick={onManage}><Icon name="plus" size={14}/>Добавить цех</button>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Загрузка цехов</h1>
+          <div className="page-sub">{workshops.length} цехов · {wStats.prog} операций в работе</div>
+        </div>
+        <div className="row">
+          <div style={{ display:'flex', gap:4 }}>
+            {[7,14,30].map(d => (
+              <button key={d} onClick={()=>setDays(d)}
+                style={{ padding:'6px 10px', borderRadius:7, border:'1px solid', fontSize:12,
+                  cursor:'pointer', fontFamily:'var(--ui-font)',
+                  background: days===d ? 'var(--accent)' : 'var(--bg-1)',
+                  borderColor: days===d ? 'var(--accent)' : 'var(--line-1)',
+                  color: days===d ? '#fff' : 'var(--fg-1)' }}>
+                {d} дн.
+              </button>
+            ))}
+          </div>
+          <button className="btn" onClick={onManage}><Icon name="cog" size={14}/>Управление</button>
+        </div>
+      </div>
+
+      {/* Список цехов */}
+      <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+        {workshops.map(w => (
+          <button key={w.id} onClick={() => setSelId(w.id)}
+            style={{ padding:'8px 14px', borderRadius:10, border:'1px solid', cursor:'pointer',
+              fontFamily:'var(--ui-font)', fontSize:13,
+              background: selId===w.id ? 'var(--accent)' : 'var(--bg-1)',
+              borderColor: selId===w.id ? 'var(--accent)' : 'var(--line-1)',
+              color: selId===w.id ? '#fff' : 'var(--fg-0)',
+              opacity: w.is_active ? 1 : .5 }}>
+            <span style={{ fontWeight:600 }}>{w.code}</span>
+            <span style={{ marginLeft:6, fontSize:11, opacity:.8 }}>{w.name.split('—')[0].trim()}</span>
+          </button>
+        ))}
+      </div>
+
+      {selected && (
+        <>
+          {/* KPI цеха */}
+          <div className="grid-4" style={{ marginBottom:16 }}>
+            <div className="kpi">
+              <div className="kpi-label">Всего операций</div>
+              <div className="kpi-value num">{wStats.total}</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">В работе</div>
+              <div className="kpi-value num" style={{ color:'var(--accent)' }}>{wStats.prog}</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">Выполнено</div>
+              <div className="kpi-value num">{wStats.done}<span className="unit">/{wStats.total}</span></div>
+              <div className="kpi-meta">{wStats.pct}%</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">Трудоёмкость</div>
+              <div className="kpi-value num">{Math.round(wStats.planMin/60)}<span className="unit">ч</span></div>
+              <div className="kpi-meta">{wStats.planMin % 60} мин</div>
+            </div>
+          </div>
+
+          {/* Загрузка рабочих центров */}
+          <div className="card" style={{ padding:'16px 18px', marginBottom:14 }}>
+            <div className="subhead" style={{ marginTop:0 }}>Рабочие центры — {selected.name.split('—')[1]?.trim() || selected.name}</div>
+            {centerGroups.length === 0 ? (
+              <div style={{ padding:'24px 0', textAlign:'center', color:'var(--fg-2)', fontSize:13 }}>
+                Нет заданий в этом цехе
+              </div>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:12 }}>
+                {centerGroups.map(g => (
+                  <div key={g.name}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
+                      <span style={{ fontSize:13, fontWeight:500, color:'var(--fg-0)', minWidth:120 }}>
+                        {g.name}
+                      </span>
+                      <div style={{ flex:1, height:16, background:'var(--bg-3)', borderRadius:4, overflow:'hidden', position:'relative' }}>
+                        {/* Выполнено */}
+                        <div style={{ position:'absolute', left:0, top:0, height:'100%', width:g.pct+'%',
+                          background:'var(--st-done-line)', opacity:.85, borderRadius:4 }}/>
+                        {/* В работе */}
+                        <div style={{ position:'absolute', left:g.pct+'%', top:0, height:'100%',
+                          width: (g.total > 0 ? Math.round(g.prog*100/g.total) : 0)+'%',
+                          background:'var(--accent)', opacity:.6 }}/>
+                        {g.pct > 8 && (
+                          <span style={{ position:'absolute', left:6, top:0, lineHeight:'16px',
+                            fontSize:10, color:'#fff', fontWeight:600 }}>{g.pct}%</span>
+                        )}
+                      </div>
+                      <div style={{ display:'flex', gap:10, fontSize:11, color:'var(--fg-2)', minWidth:160, justifyContent:'flex-end' }}>
+                        <span><b style={{ color:'var(--fg-0)' }}>{g.done}</b>/{g.total}</span>
+                        {g.prog > 0 && <span style={{ color:'var(--accent)' }}>{g.prog} в раб.</span>}
+                        <span className="num">{Math.round(g.planMin/60)}ч</span>
+                      </div>
+                    </div>
+                    {/* Нормо-часы план/факт */}
+                    {g.doneMin > 0 && (
+                      <div style={{ display:'flex', gap:16, fontSize:10, color:'var(--fg-2)', marginLeft:130, marginTop:2 }}>
+                        <span>план: <b className="num">{Math.round(g.planMin/60)}ч {g.planMin%60}м</b></span>
+                        <span>факт: <b className="num" style={{ color: g.doneMin > g.planMin ? 'var(--danger)' : 'var(--st-done-line)' }}>
+                          {Math.round(g.doneMin/60)}ч {g.doneMin%60}м
+                        </b></span>
+                        {g.planMin > 0 && (
+                          <span>откл: <b className="num" style={{ color: g.doneMin > g.planMin ? 'var(--danger)' : 'var(--st-done-line)' }}>
+                            {g.doneMin > g.planMin ? '+' : ''}{Math.round((g.doneMin - g.planMin)/60*10)/10}ч
+                          </b></span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+// =======================================================
+// ModalManageWorkshops — управление цехами и оборудованием
+// =======================================================
+function ModalManageWorkshops({ workshops, onClose, onSaved }) {
+  const [list,     setList]    = React.useState(workshops);
+  const [tab,      setTab]     = React.useState('workshops'); // 'workshops' | 'equipment'
+  const [selWid,   setSelWid]  = React.useState(workshops[0]?.id || null);
+  const [equipment, setEquip]  = React.useState([]);
+  const [loadingEq, setLoadEq] = React.useState(false);
+  const [editing,  setEditing] = React.useState(null);
+  const [form,     setForm]    = React.useState({ code:'', name:'', description:'', is_active:1 });
+  const [eqForm,   setEqForm]  = React.useState({ code:'', name:'', type:'' });
+  const [saving,   setSaving]  = React.useState(false);
+
+  const token = window.__authToken;
+
+  // Загружаем оборудование при выборе цеха
+  React.useEffect(() => {
+    if (!selWid || tab !== 'equipment') return;
+    setLoadEq(true);
+    fetch('/api/workshops/' + selWid + '/equipment', {
+      headers: { Authorization: 'Bearer ' + token }
+    }).then(r=>r.json()).then(d=>{ setEquip(d.data||[]); setLoadEq(false); })
+      .catch(()=>setLoadEq(false));
+  }, [selWid, tab]);
+
+  async function saveWorkshop() {
+    if (!form.code || !form.name) return;
+    setSaving(true);
+    try {
+      const url    = editing?.id ? '/api/workshops/'+editing.id : '/api/workshops';
+      const method = editing?.id ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method, headers: { 'Content-Type':'application/json', Authorization:'Bearer '+token },
+        body: JSON.stringify(form),
+      }).then(r=>r.json());
+      const newList = editing?.id
+        ? list.map(w => w.id===editing.id ? res : w)
+        : [...list, res];
+      setList(newList);
+      onSaved(newList);
+      setEditing(null);
+      setForm({ code:'', name:'', description:'', is_active:1 });
+    } catch(e) { alert('Ошибка: '+e.message); }
+    setSaving(false);
+  }
+
+  async function deleteWorkshop(id) {
+    if (!confirm('Удалить цех?')) return;
+    await fetch('/api/workshops/'+id, { method:'DELETE', headers:{Authorization:'Bearer '+token} });
+    const newList = list.filter(w=>w.id!==id);
+    setList(newList);
+    onSaved(newList);
+    if (selWid===id) setSelWid(newList[0]?.id||null);
+  }
+
+  async function addEquipment() {
+    if (!eqForm.code || !eqForm.name) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/workshops/'+selWid+'/equipment', {
+        method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+        body: JSON.stringify(eqForm),
+      }).then(r=>r.json());
+      setEquip(prev=>[...prev, res]);
+      setEqForm({ code:'', name:'', type:'' });
+    } catch(e) { alert('Ошибка: '+e.message); }
+    setSaving(false);
+  }
+
+  async function deleteEquipment(id) {
+    await fetch('/api/equipment/'+id, { method:'DELETE', headers:{Authorization:'Bearer '+token} });
+    setEquip(prev=>prev.filter(e=>e.id!==id));
+  }
+
+  const EQ_TYPES = ['Токарный','Фрезерный','Шлифовальный','Сверлильный','Заготовительный','Сборочный','Термический','Прочее'];
+
+  return (
+    <div className="modal-back" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:600 }}>
+        <div className="modal-head">
+          <b>Управление цехами и оборудованием</b>
+          <button className="icon-btn" onClick={onClose}><Icon name="x" size={16}/></button>
+        </div>
+
+        {/* Табы */}
+        <div style={{ display:'flex', gap:4, padding:'0 16px', borderBottom:'1px solid var(--line-2)' }}>
+          {[['workshops','Цеха'],['equipment','Оборудование']].map(([v,l])=>(
+            <button key={v} onClick={()=>setTab(v)}
+              style={{ padding:'8px 14px', border:'none', background:'transparent', cursor:'pointer',
+                fontFamily:'var(--ui-font)', fontSize:13, color: tab===v ? 'var(--accent)' : 'var(--fg-2)',
+                borderBottom: tab===v ? '2px solid var(--accent)' : '2px solid transparent',
+                fontWeight: tab===v ? 600 : 400 }}>
+              {l}
+            </button>
+          ))}
+        </div>
+
+        <div className="modal-body" style={{ minHeight:320 }}>
+
+          {/* ── ВКЛ: ЦЕХА ── */}
+          {tab === 'workshops' && (
+            <div>
+              <div style={{ marginBottom:12 }}>
+                {list.map(w => (
+                  <div key={w.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0',
+                    borderBottom:'1px solid var(--line-2)', opacity: w.is_active ? 1 : .5 }}>
+                    <span className="mono" style={{ fontSize:12, color:'var(--accent)', width:55 }}>{w.code}</span>
+                    <span style={{ flex:1, fontSize:13 }}>{w.name}</span>
+                    <button className="icon-btn" onClick={()=>{ setEditing(w); setForm({code:w.code,name:w.name,description:w.description||'',is_active:w.is_active}); }}>
+                      <Icon name="edit" size={14}/>
+                    </button>
+                    <button className="icon-btn" style={{ color:'var(--danger)' }} onClick={()=>deleteWorkshop(w.id)}>
+                      <Icon name="trash" size={14}/>
+                    </button>
+                  </div>
+                ))}
+                {list.length===0 && <div style={{color:'var(--fg-2)',fontSize:13,padding:'8px 0'}}>Нет цехов</div>}
+              </div>
+              <div className="subhead">{editing ? 'Редактировать' : 'Добавить цех'}</div>
+              <div style={{ display:'grid', gridTemplateColumns:'90px 1fr', gap:8, marginTop:8 }}>
+                <div className="field">
+                  <span className="field-label">Код</span>
+                  <input className="input" value={form.code} onChange={e=>setForm(p=>({...p,code:e.target.value}))} placeholder="ЦЕХ1"/>
+                </div>
+                <div className="field">
+                  <span className="field-label">Название</span>
+                  <input className="input" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} placeholder="Цех №1 — Механообработка"/>
+                </div>
+              </div>
+              <div className="field" style={{ marginTop:6 }}>
+                <span className="field-label">Описание</span>
+                <input className="input" value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))}/>
+              </div>
+              <div style={{ display:'flex', gap:6, marginTop:10, justifyContent:'flex-end' }}>
+                {editing && <button className="btn" onClick={()=>{setEditing(null);setForm({code:'',name:'',description:'',is_active:1});}}>Отмена</button>}
+                <button className="btn primary" onClick={saveWorkshop} disabled={saving}>
+                  {saving ? 'Сохранение…' : (editing ? 'Сохранить' : '+ Добавить')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── ВКЛ: ОБОРУДОВАНИЕ ── */}
+          {tab === 'equipment' && (
+            <div>
+              {/* Выбор цеха */}
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+                {list.map(w=>(
+                  <button key={w.id} onClick={()=>setSelWid(w.id)}
+                    style={{ padding:'4px 10px', borderRadius:7, border:'1px solid', fontSize:12,
+                      cursor:'pointer', fontFamily:'var(--ui-font)',
+                      background: selWid===w.id ? 'var(--accent)' : 'var(--bg-1)',
+                      borderColor: selWid===w.id ? 'var(--accent)' : 'var(--line-1)',
+                      color: selWid===w.id ? '#fff' : 'var(--fg-1)' }}>
+                    {w.code}
+                  </button>
+                ))}
+              </div>
+
+              {/* Список оборудования */}
+              {loadingEq ? (
+                <div style={{ color:'var(--fg-2)', fontSize:13, padding:12 }}>Загрузка…</div>
+              ) : (
+                <div style={{ marginBottom:12 }}>
+                  {equipment.map(e=>(
+                    <div key={e.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 0',
+                      borderBottom:'1px solid var(--line-2)' }}>
+                      <span className="mono" style={{ fontSize:12, color:'var(--accent)', width:80 }}>{e.code}</span>
+                      <span style={{ flex:1, fontSize:13 }}>{e.name}</span>
+                      {e.type && <span style={{ fontSize:11, color:'var(--fg-2)', background:'var(--bg-3)', padding:'1px 7px', borderRadius:4 }}>{e.type}</span>}
+                      <button className="icon-btn" style={{ color:'var(--danger)' }} onClick={()=>deleteEquipment(e.id)}>
+                        <Icon name="trash" size={13}/>
+                      </button>
+                    </div>
+                  ))}
+                  {equipment.length===0 && <div style={{color:'var(--fg-2)',fontSize:13,padding:'8px 0'}}>Нет оборудования</div>}
+                </div>
+              )}
+
+              {/* Форма добавления */}
+              <div className="subhead">Добавить оборудование</div>
+              <div style={{ display:'grid', gridTemplateColumns:'100px 1fr', gap:8, marginTop:8 }}>
+                <div className="field">
+                  <span className="field-label">Код/Марка</span>
+                  <input className="input" value={eqForm.code} onChange={e=>setEqForm(p=>({...p,code:e.target.value}))} placeholder="ДИП-300"/>
+                </div>
+                <div className="field">
+                  <span className="field-label">Название</span>
+                  <input className="input" value={eqForm.name} onChange={e=>setEqForm(p=>({...p,name:e.target.value}))} placeholder="Токарный ДИП-300"/>
+                </div>
+              </div>
+              <div className="field" style={{ marginTop:6 }}>
+                <span className="field-label">Тип</span>
+                <select className="select" value={eqForm.type} onChange={e=>setEqForm(p=>({...p,type:e.target.value}))}>
+                  <option value="">Выбрать тип…</option>
+                  {EQ_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div style={{ display:'flex', justifyContent:'flex-end', marginTop:10 }}>
+                <button className="btn primary" onClick={addEquipment} disabled={saving||!selWid}>
+                  {saving ? 'Добавление…' : '+ Добавить'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // =======================================================
 // OrdersListView — все заказы с фильтром, поиском, клик → открыть
@@ -4142,8 +3899,8 @@ function OrdersListView({ data, tasks, lang, onOpenOrder }) {
   const [statusF,   setStatusF]  = React.useState('all');
   const [view,      setView]     = React.useState('cards'); // 'cards' | 'table'
 
-  const STATUS_LBL = { plan:'Планируется', in_work:'В работе', done:'Выполнен' };
-  const STATUS_CLS = { plan:'wait', in_work:'prog', done:'done' };
+  const STATUS_LBL = { draft:'Черновик', plan:'Планируется', waiting_material:'Ждём материал', waiting_equipment:'Ждём оборудование', waiting_approval:'Ждём согласование', in_work:'В работе', paused:'Приостановлен', done:'Выполнен', cancelled:'Отменён' };
+  const STATUS_CLS = { draft:'wait', plan:'wait', waiting_material:'wait', waiting_equipment:'wait', waiting_approval:'wait', in_work:'prog', paused:'wait', done:'done', cancelled:'wait' };
   const PRI_LBL    = { high:'Высокий', normal:'Норм.', low:'Низкий' };
   const PRI_DOT    = { high:'var(--danger)', normal:'var(--accent)', low:'var(--fg-3)' };
 
@@ -5265,7 +5022,8 @@ function apiTasksToFrontend(tasks) {
     opNum: Number(t.op_num), opName: t.op_name, workCenter: t.work_center,
     time: Number(t.time_min), planned: Number(t.planned), completed: Number(t.completed),
     status: t.status, qrText: t.qr_text, operator: t.operator, updatedAt: t.updated_at,
-    startedAt: t.started_at,
+    startedAt:   t.started_at,
+    workshopId:  t.workshop_id,
   }));
 }
 function apiScanLogToFrontend(logs) {
@@ -5502,30 +5260,50 @@ function ModalEditOrder({ lang, order, details, onClose, onSaved }) {
 }
 
 // ── Modal: New Order ──────────────────────────────────────────────────
-function ModalNewOrder({ lang, details, onClose, onCreated }) {
+function ModalNewOrder({ lang, details, workshops, onClose, onCreated }) {
   const isEn = lang === 'en';
-  const [number, setNumber]     = React.useState('');
-  const [customer, setCustomer] = React.useState('');
-  const [foreman, setForeman]   = React.useState('');
-  const [dueDate, setDueDate]   = React.useState('');
-  const [items, setItems]       = React.useState([{ detailId:'', quantity:1 }]);
-  const [saving, setSaving]     = React.useState(false);
-  const [err, setErr]           = React.useState('');
+  const [number,     setNumber]     = React.useState('');
+  const [customer,   setCustomer]   = React.useState('');
+  const [foreman,    setForeman]    = React.useState('');
+  const [dueDate,    setDueDate]    = React.useState('');
+  const [status,     setStatus]     = React.useState('plan');
+  const [priority,   setPriority]   = React.useState('normal');
+  const [workshopId, setWorkshopId] = React.useState('');
+  const [comment,    setComment]    = React.useState('');
+  const [items,      setItems]      = React.useState([{ detailId:'', quantity:1 }]);
+  const [saving,     setSaving]     = React.useState(false);
+  const [err,        setErr]        = React.useState('');
+
+  const ORDER_STATUSES = [
+    { v:'draft',              l:'Черновик' },
+    { v:'plan',               l:'Планируется' },
+    { v:'waiting_material',   l:'Ждём материал' },
+    { v:'waiting_equipment',  l:'Ждём оборудование' },
+    { v:'waiting_approval',   l:'Ждём согласование' },
+    { v:'in_work',            l:'В работе' },
+  ];
+
+  const needsComment = ['waiting_material','waiting_equipment','waiting_approval'].includes(status);
 
   const addItem    = () => setItems(p=>[...p,{detailId:'',quantity:1}]);
   const removeItem = idx => setItems(p=>p.filter((_,i)=>i!==idx));
   const updateItem = (idx,k,v) => setItems(p=>p.map((it,i)=>i===idx?{...it,[k]:v}:it));
 
   async function handleSave() {
-    if (!number||!customer||!dueDate) { setErr(isEn?'Fill required fields':'Заполните обязательные поля'); return; }
+    if (!number||!customer||!dueDate) { setErr('Заполните обязательные поля'); return; }
     const validItems = items.filter(i=>i.detailId);
-    if (!validItems.length) { setErr(isEn?'Add at least one part':'Добавьте хотя бы одну деталь'); return; }
+    if (!validItems.length) { setErr('Добавьте хотя бы одну деталь'); return; }
+    if (needsComment && !comment.trim()) { setErr('Укажите причину ожидания в комментарии'); return; }
     setSaving(true); setErr('');
     try {
       await api.post('/orders', {
-        number, customer, foreman, due_date:dueDate,
-        created_at: new Date().toISOString().slice(0,10),
-        status:'in_work', priority:'normal',
+        number, customer, foreman,
+        due_date:    dueDate,
+        created_at:  new Date().toISOString().slice(0,10),
+        status,
+        priority,
+        workshop_id: workshopId ? Number(workshopId) : null,
+        comment:     comment || null,
         items: validItems.map(i=>({ detail_id:i.detailId, quantity:Number(i.quantity) })),
       });
       onCreated(); onClose();
@@ -5534,38 +5312,103 @@ function ModalNewOrder({ lang, details, onClose, onCreated }) {
   }
 
   return (
-    <div style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(0,0,0,0.55)',display:'flex',alignItems:'center',justifyContent:'center' }}>
-      <div className="card" style={{ width:520,maxHeight:'90vh',overflowY:'auto',padding:24,display:'flex',flexDirection:'column',gap:14 }}>
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-          <b style={{ fontSize:16 }}>{isEn?'New Order':'Новый заказ'}</b>
-          <button className="icon-btn" onClick={onClose}><Icon name="close" size={16}/></button>
+    <div className="modal-back" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:560 }}>
+        <div className="modal-head">
+          <b style={{ fontSize:16 }}>Новый заказ</b>
+          <button className="icon-btn" onClick={onClose}><Icon name="x" size={16}/></button>
         </div>
-        <div className="grid-3" style={{ gap:10 }}>
-          <div className="field"><span className="field-label">{isEn?'Number *':'Номер *'}</span><input className="input" value={number} onChange={e=>setNumber(e.target.value)} placeholder="ЗП-26-0200"/></div>
-          <div className="field"><span className="field-label">{isEn?'Due date *':'Срок *'}</span><input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></div>
-          <div className="field"><span className="field-label">{isEn?'Foreman':'Ст. мастер'}</span><input className="input" value={foreman} onChange={e=>setForeman(e.target.value)}/></div>
-        </div>
-        <div className="field"><span className="field-label">{isEn?'Customer *':'Получатель *'}</span><input className="input" value={customer} onChange={e=>setCustomer(e.target.value)} placeholder={isEn?'Shop №4':'Цех №4'}/></div>
-        <div>
-          <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
-            <b style={{ fontSize:13 }}>{isEn?'Parts':'Детали'}</b>
-            <button className="btn ghost" onClick={addItem}><Icon name="plus" size={13}/>{isEn?'Add':'Добавить'}</button>
-          </div>
-          {items.map((it,idx)=>(
-            <div key={idx} style={{ display:'flex',gap:8,marginBottom:6,alignItems:'center' }}>
-              <select className="select" style={{flex:1}} value={it.detailId} onChange={e=>updateItem(idx,'detailId',e.target.value)}>
-                <option value="">{isEn?'Select part…':'Выбрать деталь…'}</option>
-                {details.map(d=><option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
-              </select>
-              <input className="input" type="number" min="1" value={it.quantity} onChange={e=>updateItem(idx,'quantity',e.target.value)} style={{width:64}}/>
-              <button className="icon-btn" onClick={()=>removeItem(idx)}><Icon name="trash" size={13}/></button>
+        <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+
+          {/* Основные поля */}
+          <div className="grid-3" style={{ gap:10 }}>
+            <div className="field"><span className="field-label">Номер *</span>
+              <input className="input" value={number} onChange={e=>setNumber(e.target.value)} placeholder="ЗП-26-0200"/>
             </div>
-          ))}
+            <div className="field"><span className="field-label">Срок *</span>
+              <input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/>
+            </div>
+            <div className="field"><span className="field-label">Приоритет</span>
+              <select className="select" value={priority} onChange={e=>setPriority(e.target.value)}>
+                <option value="low">Низкий</option>
+                <option value="normal">Нормальный</option>
+                <option value="high">Высокий</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="field"><span className="field-label">Получатель *</span>
+            <input className="input" value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Цех №4"/>
+          </div>
+
+          <div className="grid-2" style={{ gap:10 }}>
+            <div className="field"><span className="field-label">Ст. мастер</span>
+              <input className="input" value={foreman} onChange={e=>setForeman(e.target.value)}/>
+            </div>
+            <div className="field"><span className="field-label">Цех</span>
+              <select className="select" value={workshopId} onChange={e=>setWorkshopId(e.target.value)}>
+                <option value="">Не выбран</option>
+                {(workshops||[]).filter(w=>w.is_active).map(w=>(
+                  <option key={w.id} value={w.id}>{w.code} — {w.name.split('—')[0].trim()}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Статус */}
+          <div className="field">
+            <span className="field-label">Статус</span>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+              {ORDER_STATUSES.map(s=>(
+                <button key={s.v} onClick={()=>setStatus(s.v)}
+                  style={{ padding:'5px 10px', borderRadius:7, border:'1px solid', fontSize:12,
+                    cursor:'pointer', fontFamily:'var(--ui-font)',
+                    background: status===s.v ? 'var(--accent)' : 'var(--bg-1)',
+                    borderColor: status===s.v ? 'var(--accent)' : 'var(--line-1)',
+                    color: status===s.v ? '#fff' : 'var(--fg-1)' }}>
+                  {s.l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Комментарий (обязателен для статусов ожидания) */}
+          <div className="field">
+            <span className="field-label">
+              Комментарий{needsComment ? ' *' : ''}
+              {needsComment && <span style={{ fontSize:10, color:'var(--danger)', marginLeft:4 }}>обязателен для этого статуса</span>}
+            </span>
+            <textarea className="input" value={comment} onChange={e=>setComment(e.target.value)}
+              placeholder={needsComment ? 'Укажите причину ожидания…' : 'Дополнительная информация…'}
+              style={{ resize:'vertical', minHeight:60 }}/>
+          </div>
+
+          {/* Детали */}
+          <div>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+              <b style={{ fontSize:13 }}>Детали</b>
+              <button className="btn ghost" onClick={addItem}><Icon name="plus" size={13}/>Добавить</button>
+            </div>
+            {items.map((it,idx)=>(
+              <div key={idx} style={{ display:'flex', gap:8, marginBottom:6, alignItems:'center' }}>
+                <select className="select" style={{flex:1}} value={it.detailId} onChange={e=>updateItem(idx,'detailId',e.target.value)}>
+                  <option value="">Выбрать деталь…</option>
+                  {details.map(d=><option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}
+                </select>
+                <input className="input" type="number" min="1" value={it.quantity}
+                  onChange={e=>updateItem(idx,'quantity',e.target.value)} style={{width:64}}/>
+                <button className="icon-btn" onClick={()=>removeItem(idx)}><Icon name="trash" size={13}/></button>
+              </div>
+            ))}
+          </div>
+
+          {err && <div style={{ color:'var(--danger)', fontSize:12 }}>{err}</div>}
         </div>
-        {err && <div style={{ color:'var(--danger)',fontSize:12 }}>{err}</div>}
-        <div style={{ display:'flex',gap:8,justifyContent:'flex-end' }}>
-          <button className="btn" onClick={onClose}>{isEn?'Cancel':'Отмена'}</button>
-          <button className="btn primary" onClick={handleSave} disabled={saving}>{saving?(isEn?'Saving…':'Сохранение…'):(isEn?'Create':'Создать')}</button>
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>Отмена</button>
+          <button className="btn primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Сохранение…' : 'Создать'}
+          </button>
         </div>
       </div>
     </div>
@@ -5983,7 +5826,7 @@ function AdminPanel({ lang, onBack }) {
       {editOrder  !== null && <ModalEditOrder lang="ru" order={editOrder} details={details} onClose={()=>setEditOrder(null)} onSaved={()=>{load();showToast('Заказ обновлён');}}/>}
       {editDetail !== null && <ModalEditDetail lang="ru" detail={editDetail} onClose={()=>setEditDetail(null)} onSaved={()=>{load();showToast('Деталь обновлена');}}/>}
       {confirm    !== null && <ConfirmDialog title={confirm.title} message={confirm.message} onConfirm={confirm.onConfirm} onClose={()=>setConfirm(null)}/>}
-      {modal === 'newOrder' && <ModalNewOrder lang="ru" details={details} onClose={()=>setModal(null)} onCreated={()=>{load();showToast('Заказ создан');}}/>}
+      {modal === 'newOrder' && <ModalNewOrder lang="ru" details={details} workshops={[]} onClose={()=>setModal(null)} onCreated={()=>{load();showToast('Заказ создан');}}/>}
       {toast && <div style={{ position:'fixed',bottom:24,right:24,background:'var(--fg-0)',color:'var(--bg-0)',padding:'10px 18px',borderRadius:8,fontSize:13,zIndex:3000 }}>{toast}</div>}
     </div>
   );
@@ -6000,6 +5843,7 @@ function App() {
   const [data, setData]               = React.useState(null);
   const [tasks, setTasks]             = React.useState([]);
   const [scanLog, setScanLog]         = React.useState([]);
+  const [workshops, setWorkshops]     = React.useState([]);
   const [route, setRoute]             = React.useState('dashboard');
   const [toasts, setToasts]           = React.useState([]);
   const [modal, setModal]             = React.useState(null);
@@ -6048,18 +5892,50 @@ function App() {
     if (Auth.can('users.view')) {
       api.get('/admin/users').then(r=>setAppUsers(r.data||[])).catch(()=>{});
     }
+
+    // SSE — реальное время
+    let es = null;
+    let retryTimer = null;
+    function connectSSE() {
+      const token = Auth.getToken();
+      if (!token) return;
+      es = new EventSource('/api/events?token=' + encodeURIComponent(token) + '&since=' + Math.floor(Date.now()/1000 - 10));
+      es.addEventListener('task_updated', e => {
+        const d = JSON.parse(e.data);
+        setTasks(prev => prev.map(t => t.id === d.id ? {
+          ...t,
+          status:    d.status,
+          operator:  d.operator || t.operator,
+          completed: d.completed,
+        } : t));
+      });
+      es.addEventListener('scan_logged', () => {
+        api.get('/scan-log?limit=50').then(r => setScanLog(apiScanLogToFrontend(r.data))).catch(()=>{});
+      });
+      es.addEventListener('order_updated', () => {
+        api.get('/orders').then(r => {
+          setData(prev => prev ? { ...prev, orders: apiOrderToData(r.data, prev.details || []).orders } : prev);
+        }).catch(()=>{});
+      });
+      es.addEventListener('reconnect', () => { es.close(); retryTimer = setTimeout(connectSSE, 1000); });
+      es.onerror = () => { es.close(); retryTimer = setTimeout(connectSSE, 3000); };
+    }
+    connectSSE();
+    return () => { if (es) es.close(); if (retryTimer) clearTimeout(retryTimer); };
   }, [authUser]);
 
   async function loadAll() {
     try {
-      const [or, dr, tr, lr] = await Promise.all([
+      const [or, dr, tr, lr, wr] = await Promise.all([
         api.get('/orders'), api.get('/details'),
         api.get('/tasks'),  api.get('/scan-log?limit=50'),
+        api.get('/workshops'),
       ]);
       const d = apiOrderToData(or.data, dr.data);
       setData(d);
       setTasks(apiTasksToFrontend(tr.data));
       setScanLog(apiScanLogToFrontend(lr.data));
+      setWorkshops(wr.data || []);
       if (!activeOrderId && d.orders.length) setActiveOrderId(d.orders[0].id);
     } catch(e) { pushToast('Ошибка загрузки: '+e.message); }
   }
@@ -6099,6 +5975,9 @@ function App() {
   }
 
   function handleLogin(user) { setAuthUser(user); Auth.setUser(user); }
+
+  // Expose token for components that make direct fetch calls
+  React.useEffect(() => { window.__authToken = Auth.getToken(); }, [authUser]);
   function handleLogout() {
     const rt = Auth.getRefresh();
     if (rt) api.post('/auth/logout',{refresh_token:rt}).catch(()=>{});
@@ -6157,7 +6036,7 @@ function App() {
                 <OrderPicker orders={data.orders} activeId={activeOrderId}
                   onSelect={setActiveOrderId} onNew={()=>setModal('newOrder')} lang={t.lang}/>
               </div>
-              <OrderBuilder data={activeData} tasks={tasks} lang={t.lang}
+              <OrderBuilder key={activeOrderId} data={activeData} tasks={tasks} lang={t.lang}
                 onPrint={()=>setRoute('routesheet')}
                 onSave={async()=>{ pushToast('Заказ сохранён'); await loadAll(); }}
                 onDeleteOrder={o=>{
@@ -6216,6 +6095,8 @@ function App() {
               setActiveOrderId(id);
               setRoute('orders');
             }}/>}
+          {route === 'workshop' && <WorkshopView workshops={workshops} tasks={tasks} lang={t.lang}
+            onManage={()=>setModal('manageWorkshops')}/>}
           {route === 'history' && <HistoryView data={data} tasks={tasks} scanLog={scanLog} lang={t.lang}/>}
           {route === 'report'  && <ReportView  data={data} tasks={tasks} scanLog={scanLog} lang={t.lang}/>}
         </div>
@@ -6247,6 +6128,7 @@ function App() {
           ['orders-list','grid',   'Список',    0],
           ['scanner',   'scan',    'Сканер',    0],
           ['library',   'library', 'Детали',    0],
+          ['workshop',  'building','Цеха',      0],
           ['history',   'clock',   'Журнал',    0],
         ].map(([r, icon, label, badge]) => (
           <button key={r} className={'mobile-nav-item'+(route===r||route==='routesheet'&&r==='orders'?' active':'')}
@@ -6258,7 +6140,10 @@ function App() {
         ))}
       </nav>
 
-      {modal==='newOrder'  && <ModalNewOrder  lang={t.lang} details={data.details} onClose={()=>setModal(null)} onCreated={()=>{loadAll();pushToast('Заказ создан');}}/>}
+      {modal==='newOrder'  && <ModalNewOrder  lang={t.lang} details={data.details} workshops={workshops} onClose={()=>setModal(null)} onCreated={()=>{loadAll();pushToast('Заказ создан');}}/>}
+      {modal==='manageWorkshops' && <ModalManageWorkshops workshops={workshops}
+          onClose={()=>setModal(null)}
+          onSaved={ws=>{ setWorkshops(ws); setModal(null); }}/>}
       {modal==='newDetail' && <ModalNewDetail lang={t.lang} onClose={()=>setModal(null)} onCreated={()=>{loadAll();pushToast('Деталь добавлена');}}/>}
       {editingDetail && <ModalEditDetail lang={t.lang} detail={editingDetail} onClose={()=>setEditingDetail(null)} onSaved={()=>{loadAll();pushToast('Деталь сохранена');setEditingDetail(null);}}/>}
       {editingOrder  && <ModalEditOrder  lang={t.lang} order={editingOrder}  details={data.details} onClose={()=>setEditingOrder(null)}  onSaved={()=>{loadAll();pushToast('Заказ сохранён');setEditingOrder(null);}}/>}

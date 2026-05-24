@@ -1,4 +1,5 @@
-import React from 'react';
+import React from 'react'
+import qrcode from 'qrcode-generator'
 
 // qr.jsx — QR generation (uses qrcode-generator from CDN, exposed as window.qrcode)
 
@@ -55,7 +56,7 @@ const QrCode = React.memo(function QrCode({ text, size = 90, className, style })
   );
 });
 
+window.QrCode = QrCode;
+window.generateQrSvg = generateQrSvg;
 
-
-export { QrCode, generateQrSvg };
-export default QrCode;
+export { generateQrSvg, QrCode }

@@ -79,7 +79,7 @@ class RateLimit
     {
         // Trust X-Forwarded-For only if behind a known proxy
         // For simplicity use REMOTE_ADDR; configure proxy trust in nginx
-        return $_SERVER['HTTP_X_FORWARDED_FOR']
+        return isset($_SERVER['HTTP_X_FORWARDED_FOR'])
             ? explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]
             : ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
     }

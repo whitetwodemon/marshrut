@@ -79,21 +79,26 @@ class OrdersController
             $id = self::generateId($db);
         }
 
+        $allowed_statuses = ['draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled'];
+        $status = in_array($body['status'] ?? 'draft', $allowed_statuses) ? ($body['status'] ?? 'draft') : 'draft';
+
         try {
             $db->beginTransaction();
 
             $db->prepare(
-                'INSERT INTO orders (id, number, customer, foreman, status, priority, due_date, created_at)
-                 VALUES (:id, :number, :customer, :foreman, :status, :priority, :due_date, :created_at)'
+                'INSERT INTO orders (id, number, customer, foreman, workshop_id, status, priority, due_date, created_at, comment)
+                 VALUES (:id, :number, :customer, :foreman, :workshop_id, :status, :priority, :due_date, :created_at, :comment)'
             )->execute([
-                ':id'         => $id,
-                ':number'     => $body['number'],
-                ':customer'   => $body['customer'],
-                ':foreman'    => $body['foreman']    ?? null,
-                ':status'     => $body['status']     ?? 'plan',
-                ':priority'   => $body['priority']   ?? 'normal',
-                ':due_date'   => $body['due_date'],
-                ':created_at' => $body['created_at'] ?? date('Y-m-d'),
+                ':id'          => $id,
+                ':number'      => sanitize_string($body['number'], 50),
+                ':customer'    => sanitize_string($body['customer'], 255),
+                ':foreman'     => sanitize_string($body['foreman'] ?? '', 100) ?: null,
+                ':workshop_id' => $body['workshop_id'] ?? null,
+                ':status'      => $status,
+                ':priority'    => $body['priority']   ?? 'normal',
+                ':due_date'    => $body['due_date'],
+                ':created_at'  => $body['created_at'] ?? date('Y-m-d'),
+                ':comment'     => sanitize_string($body['comment'] ?? '', 1000) ?: null,
             ]);
 
             if (!empty($body['items'])) {
@@ -120,33 +125,29 @@ class OrdersController
             json_out(['error' => $err], 422);
         }
 
-        $allowed_status   = ['plan', 'in_work', 'done'];
+        $allowed_statuses = ['draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled'];
         $allowed_priority = ['low', 'normal', 'high'];
-        $status   = $body['status']   ?? 'plan';
-        $priority = $body['priority'] ?? 'normal';
-
-        if (!in_array($status, $allowed_status, true)) {
-            json_out(['error' => 'Недопустимый статус'], 422);
-        }
-        if (!in_array($priority, $allowed_priority, true)) {
-            json_out(['error' => 'Недопустимый приоритет'], 422);
-        }
+        $status   = in_array($body['status']   ?? 'plan', $allowed_statuses, true) ? $body['status']   : 'plan';
+        $priority = in_array($body['priority'] ?? 'normal', $allowed_priority, true) ? $body['priority'] : 'normal';
 
         try {
             $db->beginTransaction();
 
             $db->prepare(
                 'UPDATE orders SET number=:number, customer=:customer, foreman=:foreman,
-                                   status=:status, priority=:priority, due_date=:due_date
+                                   workshop_id=:workshop_id, status=:status, priority=:priority,
+                                   due_date=:due_date, comment=:comment
                   WHERE id = :id'
             )->execute([
-                ':id'       => $params['id'],
-                ':number'   => sanitize_string($body['number'],   50),
-                ':customer' => sanitize_string($body['customer'], 255),
-                ':foreman'  => sanitize_string($body['foreman'] ?? '', 100) ?: null,
-                ':status'   => $status,
-                ':priority' => $priority,
-                ':due_date' => $body['due_date'],
+                ':id'          => $params['id'],
+                ':number'      => sanitize_string($body['number'], 50),
+                ':customer'    => sanitize_string($body['customer'], 255),
+                ':foreman'     => sanitize_string($body['foreman'] ?? '', 100) ?: null,
+                ':workshop_id' => $body['workshop_id'] ?? null,
+                ':status'      => $status,
+                ':priority'    => $priority,
+                ':due_date'    => $body['due_date'],
+                ':comment'     => sanitize_string($body['comment'] ?? '', 1000) ?: null,
             ]);
 
             if (isset($body['items'])) {
@@ -248,11 +249,16 @@ class OrdersController
 
         $ins = $db->prepare(
             'INSERT IGNORE INTO tasks
-                (id, order_id, detail_id, op_num, op_name, work_center, time_min, planned, qr_text)
-             VALUES (:id, :oid, :did, :num, :name, :wc, :time, :qty, :qr)'
+                (id, order_id, detail_id, op_num, op_name, work_center, workshop_id, time_min, planned, qr_text)
+             VALUES (:id, :oid, :did, :num, :name, :wc, :wid, :time, :qty, :qr)'
         );
 
         $orderNum = str_starts_with($orderId, 'O-') ? substr($orderId, 2) : $orderId;
+
+        // Get workshop_id from order
+        $workshopStmt = $db->prepare('SELECT workshop_id FROM orders WHERE id = :id');
+        $workshopStmt->execute([':id' => $orderId]);
+        $workshopId = $workshopStmt->fetchColumn() ?: null;
 
         foreach ($items->fetchAll() as $row) {
             $detId  = $row['detail_id'];
@@ -267,6 +273,7 @@ class OrdersController
                 ':num'  => (int) $row['num'],
                 ':name' => $row['name'],
                 ':wc'   => $row['work_center'],
+                ':wid'  => $workshopId,
                 ':time' => (int) $row['time_min'],
                 ':qty'  => (int) $row['quantity'],
                 ':qr'   => $qr,

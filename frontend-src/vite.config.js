@@ -1,21 +1,29 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
-  // Build outputs to ../frontend so nginx serves the compiled files
-  build: {
-    outDir: '../frontend',
-    emptyOutDir: true,
-  },
-  // Dev server proxies API to backend
   server: {
+    port: 5173,
+    host: '0.0.0.0',
     proxy: {
-      '/api': {
-        target: 'https://localhost:8443',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+      '/api': { target: 'http://php:9000', changeOrigin: true }
+    }
   },
-});
+  build: {
+    outDir: './dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react:  ['react', 'react-dom'],
+          vendor: ['qrcode-generator', 'jsqr', 'xlsx'],
+        }
+      }
+    }
+  }
+})
