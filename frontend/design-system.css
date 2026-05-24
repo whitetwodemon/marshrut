@@ -1596,6 +1596,19 @@ button { font-family: inherit; }
 
   /* Скрыть лишнее */
   .tweaks { display: none !important; }
+
+  /* Список заказов — карточки */
+  .orders-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI мини строка */
+  .orders-kpi-row {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .orders-kpi-row .kpi { padding: 8px 10px !important; }
+  .orders-kpi-row .kpi-value { font-size: 18px !important; }
 }
 
 /* ═══════════════════════════════════════════

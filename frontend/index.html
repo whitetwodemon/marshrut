@@ -1620,6 +1620,19 @@ button { font-family: inherit; }
 
   /* Скрыть лишнее */
   .tweaks { display: none !important; }
+
+  /* Список заказов — карточки */
+  .orders-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI мини строка */
+  .orders-kpi-row {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .orders-kpi-row .kpi { padding: 8px 10px !important; }
+  .orders-kpi-row .kpi-value { font-size: 18px !important; }
 }
 
 /* ═══════════════════════════════════════════
@@ -2321,6 +2334,20 @@ const Icon = ({ name, size = 16, className, style }) => {
       <svg {...props}>
         <circle cx="12" cy="12" r="8.5" />
         <path d="M12 7v5l3 2" />
+      </svg>
+    );
+    case 'grid': return (
+      <svg {...props}>
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    );
+    case 'list': return (
+      <svg {...props}>
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <circle cx="3" cy="6" r="1.5" fill="currentColor"/><circle cx="3" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="3" cy="18" r="1.5" fill="currentColor"/>
       </svg>
     );
     case 'chart': return (
@@ -4111,25 +4138,24 @@ function ReportsDropdown({ onNavigate, lang }) {
 // OrdersListView — все заказы с фильтром, поиском, клик → открыть
 // =======================================================
 function OrdersListView({ data, tasks, lang, onOpenOrder }) {
-  const [query,    setQuery]    = React.useState('');
-  const [statusF,  setStatusF]  = React.useState('all');
-  const [priorityF,setPriorityF]= React.useState('all');
-  const [sortCol,  setSortCol]  = React.useState('created');
-  const [sortDir,  setSortDir]  = React.useState('desc');
+  const [query,     setQuery]    = React.useState('');
+  const [statusF,   setStatusF]  = React.useState('all');
+  const [view,      setView]     = React.useState('cards'); // 'cards' | 'table'
 
-  const STATUS_LBL  = { plan:'Планируется', in_work:'В работе', done:'Выполнен' };
-  const STATUS_CLS  = { plan:'wait', in_work:'prog', done:'done' };
-  const PRI_LBL     = { high:'Высокий', normal:'Нормальный', low:'Низкий' };
-  const PRI_COL     = { high:'var(--danger)', normal:'var(--fg-1)', low:'var(--fg-2)' };
+  const STATUS_LBL = { plan:'Планируется', in_work:'В работе', done:'Выполнен' };
+  const STATUS_CLS = { plan:'wait', in_work:'prog', done:'done' };
+  const PRI_LBL    = { high:'Высокий', normal:'Норм.', low:'Низкий' };
+  const PRI_DOT    = { high:'var(--danger)', normal:'var(--accent)', low:'var(--fg-3)' };
 
   const enriched = React.useMemo(() => data.orders.map(o => {
-    const ot = tasks.filter(t => t.orderId === o.id);
-    const done  = ot.filter(t => t.status === 'done').length;
-    const total = ot.length;
-    const pct   = total > 0 ? Math.round(done / total * 100) : 0;
-    const due   = o.dueDate || o.due_date || '';
+    const ot     = tasks.filter(t => t.orderId === o.id);
+    const done   = ot.filter(t => t.status === 'done').length;
+    const inProg = ot.filter(t => t.status === 'in_progress').length;
+    const total  = ot.length;
+    const pct    = total > 0 ? Math.round(done / total * 100) : 0;
+    const due    = o.dueDate || o.due_date || '';
     const overdue = due && new Date(due) < new Date() && o.status !== 'done';
-    return { ...o, due, done, total, pct, overdue, detailsCt: (o.items||[]).length };
+    return { ...o, due, done, inProg, total, pct, overdue, detailsCt: (o.items||[]).length };
   }), [data.orders, tasks]);
 
   const filtered = React.useMemo(() => {
@@ -4140,50 +4166,115 @@ function OrdersListView({ data, tasks, lang, onOpenOrder }) {
       (o.customer||'').toLowerCase().includes(q) ||
       (o.foreman||'').toLowerCase().includes(q)
     );
-    if (statusF !== 'all')   list = list.filter(o => o.status === statusF);
-    if (priorityF !== 'all') list = list.filter(o => (o.priority||'normal') === priorityF);
+    if (statusF !== 'all') list = list.filter(o => o.status === statusF);
+    return list.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  }, [enriched, query, statusF]);
 
-    list.sort((a,b) => {
-      let va, vb;
-      if (sortCol === 'number')   { va=a.number;   vb=b.number; }
-      else if (sortCol==='due')   { va=a.due||'';  vb=b.due||''; }
-      else if (sortCol==='pct')   { va=a.pct;      vb=b.pct; }
-      else if (sortCol==='status'){ va=a.status;   vb=b.status; }
-      else { va=a.createdAt||''; vb=b.createdAt||''; }
-      const cmp = typeof va==='number' ? va-vb : (va||'').localeCompare(vb||'');
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-    return list;
-  }, [enriched, query, statusF, priorityF, sortCol, sortDir]);
+  const counts = {
+    all:     enriched.length,
+    in_work: enriched.filter(o=>o.status==='in_work').length,
+    plan:    enriched.filter(o=>o.status==='plan').length,
+    done:    enriched.filter(o=>o.status==='done').length,
+    overdue: enriched.filter(o=>o.overdue).length,
+  };
 
-  function sort(col) {
-    if (sortCol === col) setSortDir(d => d==='asc'?'desc':'asc');
-    else { setSortCol(col); setSortDir('desc'); }
-  }
+  // Группировка по статусу для карточного вида
+  const groups = statusF === 'all'
+    ? [
+        { key:'in_work', label:'В работе',    items: filtered.filter(o=>o.status==='in_work') },
+        { key:'plan',    label:'Планируется', items: filtered.filter(o=>o.status==='plan') },
+        { key:'done',    label:'Выполнено',   items: filtered.filter(o=>o.status==='done') },
+      ].filter(g => g.items.length > 0)
+    : [{ key: statusF, label: STATUS_LBL[statusF], items: filtered }];
 
-  function Th({ col, label, cls }) {
-    const active = sortCol === col;
+  function OrderCard({ o }) {
     return (
-      <th className={cls} style={{ cursor:'pointer', userSelect:'none', whiteSpace:'nowrap' }}
-        onClick={() => sort(col)}>
-        {label}
-        <span style={{ marginLeft:4, opacity: active ? 1 : .3, fontSize:10 }}>
-          {active ? (sortDir==='asc' ? '▲' : '▼') : '▲'}
-        </span>
-      </th>
+      <div onClick={() => onOpenOrder(o.id)}
+        style={{ background:'var(--bg-1)', border:'1px solid var(--line-1)', borderRadius:12,
+          padding:'14px 16px', cursor:'pointer', transition:'all .15s', display:'flex',
+          flexDirection:'column', gap:10, position:'relative',
+          borderLeft: o.overdue ? '3px solid var(--danger)' : undefined }}
+        onMouseEnter={e=>e.currentTarget.style.borderColor='var(--accent)'}
+        onMouseLeave={e=>e.currentTarget.style.borderColor=o.overdue?'var(--danger)':'var(--line-1)'}>
+
+        {/* Заголовок карточки */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8 }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
+              <span className="mono" style={{ fontWeight:700, color:'var(--accent)', fontSize:14 }}>
+                {o.number}
+              </span>
+              {o.overdue && (
+                <span style={{ fontSize:10, color:'var(--danger)', fontWeight:600 }}>⚠ просрочен</span>
+              )}
+            </div>
+            <div style={{ fontSize:13, fontWeight:500, color:'var(--fg-0)' }}>{o.customer}</div>
+            {o.foreman && (
+              <div style={{ fontSize:11, color:'var(--fg-2)', marginTop:1 }}>мастер: {o.foreman}</div>
+            )}
+          </div>
+          <div style={{ textAlign:'right', flexShrink:0 }}>
+            <span className={'pill '+STATUS_CLS[o.status]} style={{ fontSize:10 }}>
+              <span className="dot"/>{STATUS_LBL[o.status]}
+            </span>
+            {o.due && (
+              <div style={{ fontSize:10, color: o.overdue ? 'var(--danger)' : 'var(--fg-2)', marginTop:4 }}>
+                до {o.due}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Прогресс */}
+        {o.total > 0 && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4,
+              fontSize:11, color:'var(--fg-2)' }}>
+              <span>{o.done} из {o.total} операций</span>
+              <span className="num" style={{ fontWeight:600,
+                color: o.pct===100 ? 'var(--st-done-line)' : 'var(--fg-1)' }}>{o.pct}%</span>
+            </div>
+            <div style={{ height:4, background:'var(--bg-3)', borderRadius:2, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:o.pct+'%', borderRadius:2, transition:'width .3s',
+                background: o.pct===100 ? 'var(--st-done-line)' :
+                            o.pct > 60  ? 'var(--st-prog-line)' : 'var(--accent)' }}/>
+            </div>
+          </div>
+        )}
+
+        {/* Метаданные */}
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          <span style={{ fontSize:10, padding:'2px 7px', borderRadius:4,
+            background:'var(--bg-3)', color:'var(--fg-2)' }}>
+            {o.detailsCt} дет.
+          </span>
+          {o.inProg > 0 && (
+            <span style={{ fontSize:10, padding:'2px 7px', borderRadius:4,
+              background:'var(--bg-3)', color:'var(--st-prog-line)' }}>
+              {o.inProg} в работе
+            </span>
+          )}
+          {o.priority && o.priority !== 'normal' && (
+            <span style={{ fontSize:10, padding:'2px 7px', borderRadius:4,
+              background:'var(--bg-3)', color: PRI_DOT[o.priority] }}>
+              {PRI_LBL[o.priority]}
+            </span>
+          )}
+        </div>
+      </div>
     );
   }
 
-  const inWork = filtered.filter(o=>o.status==='in_work').length;
-  const done   = filtered.filter(o=>o.status==='done').length;
-  const overdue= filtered.filter(o=>o.overdue).length;
-
   return (
     <>
+      {/* Шапка */}
       <div className="page-head">
         <div>
-          <h1 className="page-title">Все заказы</h1>
-          <div className="page-sub">{filtered.length} заказов · {inWork} в работе · {done} выполнено{overdue>0?` · `+overdue+` просрочено`:''}</div>
+          <h1 className="page-title">Заказы</h1>
+          <div className="page-sub">
+            {counts.all} всего · {counts.in_work} в работе · {counts.plan} планируется
+            {counts.overdue > 0 && <span style={{ color:'var(--danger)' }}> · {counts.overdue} просрочено</span>}
+          </div>
         </div>
         <div className="row">
           <button className="btn primary" onClick={() => onOpenOrder('new')}>
@@ -4192,113 +4283,137 @@ function OrdersListView({ data, tasks, lang, onOpenOrder }) {
         </div>
       </div>
 
-      {/* Фильтры */}
+      {/* KPI строка */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14 }}>
+        {[
+          { label:'В работе',    val: counts.in_work, accent: true },
+          { label:'Планируется', val: counts.plan },
+          { label:'Выполнено',   val: counts.done },
+        ].map(k => (
+          <div key={k.label} className="kpi" style={{ padding:'10px 12px' }}>
+            <div className="kpi-label">{k.label}</div>
+            <div className="kpi-value num" style={{
+              fontSize:22, color: k.accent ? 'var(--accent)' : undefined }}>{k.val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Поиск + фильтры + переключатель вида */}
       <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap', alignItems:'center' }}>
-        <div style={{ position:'relative', flex:'1', minWidth:200, maxWidth:320 }}>
-          <Icon name="search" size={13} style={{ position:'absolute',left:9,top:'50%',transform:'translateY(-50%)',color:'var(--fg-2)' }}/>
+        <div style={{ position:'relative', flex:1, minWidth:160 }}>
+          <Icon name="search" size={13} style={{ position:'absolute', left:9,
+            top:'50%', transform:'translateY(-50%)', color:'var(--fg-2)' }}/>
           <input className="input" value={query} onChange={e=>setQuery(e.target.value)}
-            placeholder="Поиск по номеру, клиенту, мастеру…"
-            style={{ paddingLeft:28, fontSize:12 }}/>
+            placeholder="Поиск…" style={{ paddingLeft:30 }}/>
         </div>
         <div style={{ display:'flex', gap:4 }}>
-          {[['all','Все'], ['in_work','В работе'], ['plan','План'], ['done','Выполнен']].map(([v,l])=>(
+          {[['all','Все'], ['in_work','В работе'], ['plan','План'], ['done','Готово']].map(([v,l])=>(
             <button key={v} onClick={()=>setStatusF(v)}
-              style={{ padding:'5px 10px', borderRadius:7, border:'1px solid', fontSize:12,
-                cursor:'pointer', fontFamily:'var(--ui-font)',
+              style={{ padding:'6px 10px', borderRadius:7, border:'1px solid', fontSize:12,
+                cursor:'pointer', fontFamily:'var(--ui-font)', whiteSpace:'nowrap',
                 background: statusF===v ? 'var(--accent)' : 'var(--bg-1)',
                 borderColor: statusF===v ? 'var(--accent)' : 'var(--line-1)',
                 color: statusF===v ? '#fff' : 'var(--fg-1)' }}>
-              {l}
+              {l}{v!=='all' && counts[v]>0 ? ` ${counts[v]}` : ''}
             </button>
           ))}
         </div>
-        <div style={{ display:'flex', gap:4 }}>
-          {[['all','Все приоритеты'], ['high','Высокий'], ['normal','Норм.'], ['low','Низкий']].map(([v,l])=>(
-            <button key={v} onClick={()=>setPriorityF(v)}
-              style={{ padding:'5px 10px', borderRadius:7, border:'1px solid', fontSize:12,
-                cursor:'pointer', fontFamily:'var(--ui-font)',
-                background: priorityF===v ? 'var(--bg-2)' : 'transparent',
-                borderColor: priorityF===v ? 'var(--line-0)' : 'var(--line-1)',
-                color: 'var(--fg-1)' }}>
-              {l}
+        {/* Переключатель вид */}
+        <div style={{ display:'flex', gap:2, background:'var(--bg-1)',
+          border:'1px solid var(--line-1)', borderRadius:8, padding:2, marginLeft:'auto' }}>
+          {[['cards','grid'], ['table','list']].map(([v, icon])=>(
+            <button key={v} onClick={()=>setView(v)}
+              style={{ padding:'5px 8px', borderRadius:6, border:'none', cursor:'pointer',
+                background: view===v ? 'var(--bg-3)' : 'transparent',
+                color: view===v ? 'var(--fg-0)' : 'var(--fg-2)' }}>
+              <Icon name={icon} size={14}/>
             </button>
           ))}
         </div>
-        <span style={{ marginLeft:'auto', fontSize:11, color:'var(--fg-2)' }}>
-          {filtered.length} из {data.orders.length}
-        </span>
       </div>
 
-      {/* Таблица */}
-      <div className="tbl-wrap">
-        <table className="tbl">
-          <thead>
-            <tr>
-              <Th col="number" label="Номер"/>
-              <th>Получатель / Мастер</th>
-              <Th col="status"  label="Статус"/>
-              <Th col="due"     label="Срок"/>
-              <th className="hide-mobile">Приоритет</th>
-              <th className="num-col hide-mobile">Деталей</th>
-              <Th col="pct"     label="Прогресс" cls="hide-mobile"/>
-              <th style={{width:40}}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan="8">
-                <div className="empty-state" style={{ border:0 }}>Заказы не найдены</div>
-              </td></tr>
-            )}
-            {filtered.map(o => (
-              <tr key={o.id} className="row-hover"
-                onClick={() => onOpenOrder(o.id)}
-                style={{ cursor:'pointer', opacity: o.status==='done' ? .75 : 1 }}>
-                <td>
-                  <span className="mono" style={{ fontWeight:700, color:'var(--accent)', fontSize:13 }}>
-                    {o.number}
-                  </span>
-                  {o.overdue && <span style={{ marginLeft:6, fontSize:10, color:'var(--danger)' }}>⚠ просрочен</span>}
-                </td>
-                <td>
-                  <div style={{ fontSize:13 }}>{o.customer}</div>
-                  {o.foreman && <div style={{ fontSize:11, color:'var(--fg-2)' }}>{o.foreman}</div>}
-                </td>
-                <td>
-                  <span className={'pill '+STATUS_CLS[o.status]} style={{ fontSize:11 }}>
-                    <span className="dot"/>{STATUS_LBL[o.status]}
-                  </span>
-                </td>
-                <td className="mono" style={{ fontSize:12,
-                  color: o.overdue ? 'var(--danger)' : 'var(--fg-1)' }}>
-                  {o.due||'—'}
-                </td>
-                <td className="hide-mobile" style={{ fontSize:12, color: PRI_COL[o.priority||'normal'] }}>
-                  {PRI_LBL[o.priority||'normal']}
-                </td>
-                <td className="num-col hide-mobile">
-                  <span className="num">{o.detailsCt}</span>
-                </td>
-                <td className="hide-mobile" style={{ width:160 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <div style={{ flex:1, height:5, background:'var(--bg-3)', borderRadius:3, overflow:'hidden' }}>
-                      <div style={{ height:'100%', width:o.pct+'%', borderRadius:3,
-                        background: o.pct===100?'var(--st-done-line)':o.pct>50?'var(--st-prog-line)':'var(--accent)' }}/>
-                    </div>
-                    <span className="mono num" style={{ fontSize:11, minWidth:28 }}>{o.pct}%</span>
-                  </div>
-                  <div style={{ fontSize:10, color:'var(--fg-2)', marginTop:1 }}>{o.done}/{o.total} оп.</div>
-                </td>
-                <td onClick={e=>e.stopPropagation()}>
-                  <button className="icon-btn" onClick={()=>onOpenOrder(o.id)} title="Открыть заказ">
-                    <Icon name="arrow-right" size={14}/>
-                  </button>
-                </td>
+      {/* КАРТОЧНЫЙ ВИД */}
+      {view === 'cards' && (
+        <div>
+          {filtered.length === 0 && (
+            <div className="empty-state">Заказы не найдены</div>
+          )}
+          {groups.map(g => (
+            <div key={g.key} style={{ marginBottom:20 }}>
+              <div style={{ fontSize:11, fontWeight:600, letterSpacing:'.06em',
+                textTransform:'uppercase', color:'var(--fg-2)', marginBottom:8 }}>
+                {g.label} · {g.items.length}
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:10 }}>
+                {g.items.map(o => <OrderCard key={o.id} o={o}/>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ТАБЛИЧНЫЙ ВИД */}
+      {view === 'table' && (
+        <div className="tbl-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Номер</th>
+                <th>Клиент</th>
+                <th>Статус</th>
+                <th className="hide-mobile">Срок</th>
+                <th className="hide-mobile">Прогресс</th>
+                <th style={{width:40}}/>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr><td colSpan="6">
+                  <div className="empty-state" style={{border:0}}>Заказы не найдены</div>
+                </td></tr>
+              )}
+              {filtered.map(o => (
+                <tr key={o.id} className="row-hover" onClick={()=>onOpenOrder(o.id)}
+                  style={{ cursor:'pointer', opacity: o.status==='done'?.75:1 }}>
+                  <td>
+                    <span className="mono" style={{ fontWeight:700, color:'var(--accent)', fontSize:13 }}>
+                      {o.number}
+                    </span>
+                    {o.overdue && <span style={{ marginLeft:6, fontSize:10, color:'var(--danger)' }}>⚠</span>}
+                  </td>
+                  <td>
+                    <div style={{ fontSize:13 }}>{o.customer}</div>
+                    {o.foreman && <div style={{ fontSize:11, color:'var(--fg-2)' }}>{o.foreman}</div>}
+                  </td>
+                  <td>
+                    <span className={'pill '+STATUS_CLS[o.status]} style={{ fontSize:11 }}>
+                      <span className="dot"/>{STATUS_LBL[o.status]}
+                    </span>
+                  </td>
+                  <td className="hide-mobile mono" style={{ fontSize:12,
+                    color: o.overdue?'var(--danger)':'var(--fg-1)' }}>
+                    {o.due||'—'}
+                  </td>
+                  <td className="hide-mobile" style={{ width:140 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <div style={{ flex:1, height:4, background:'var(--bg-3)', borderRadius:2, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:o.pct+'%', borderRadius:2,
+                          background: o.pct===100?'var(--st-done-line)':o.pct>60?'var(--st-prog-line)':'var(--accent)' }}/>
+                      </div>
+                      <span className="mono num" style={{ fontSize:11 }}>{o.pct}%</span>
+                    </div>
+                  </td>
+                  <td onClick={e=>e.stopPropagation()}>
+                    <button className="icon-btn" onClick={()=>onOpenOrder(o.id)}>
+                      <Icon name="arrow-right" size={14}/>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   );
 }
@@ -6009,7 +6124,6 @@ function App() {
     routesheet: ['Маршрут','Заказы',activeOrder?.number||'—','Маршрутный лист'],
     report:       ['Маршрут','Отчёт по заказам'],
     'orders-list': ['Маршрут','Все заказы'],
-    'orders-list': ['Маршрут','Все заказы'],
   }[route] || [];
 
   return (
@@ -6130,6 +6244,7 @@ function App() {
         {[
           ['dashboard', 'home',    'Табло',     counts.inProgress],
           ['orders',    'file',    'Заказы',    counts.orders],
+          ['orders-list','grid',   'Список',    0],
           ['scanner',   'scan',    'Сканер',    0],
           ['library',   'library', 'Детали',    0],
           ['history',   'clock',   'Журнал',    0],
