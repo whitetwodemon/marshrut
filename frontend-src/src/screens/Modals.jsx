@@ -82,6 +82,8 @@ function ModalEditOrder({ lang, order, details, workshops, onClose, onSaved }) {
   const [dueDate, setDueDate]   = React.useState(order.dueDate || order.due_date || '');
   const [status, setStatus]     = React.useState(order.status);
   const [priority, setPriority] = React.useState(order.priority || 'normal');
+  const [workshopId, setWorkshopId] = React.useState(order.workshop_id || order.workshopId || '');
+  const [comment, setComment]   = React.useState(order.comment || '');
   const [items, setItems]       = React.useState(
     (order.items||[]).map(i => ({ detailId: i.detailId||i.detail_id, quantity: Number(i.quantity) }))
   );

@@ -1390,6 +1390,11 @@ button { font-family: inherit; }
   .scanner-stage { grid-template-columns: 1fr; }
 }
 
+
+/* Нормоконтроль */
+.overdue-row { border-left: 2px solid var(--danger) !important; }
+.overdue-row .task-name { color: var(--fg-0) !important; }
+
 /* ═══════════════════════════════════════════
    МОБИЛЬНЫЙ (≤768px)
    ═══════════════════════════════════════════ */

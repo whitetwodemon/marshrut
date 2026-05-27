@@ -40,6 +40,12 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
   const doneTime  = allTasks.filter(t => t.status === 'done').reduce((s, t) => s + t.time * t.planned, 0);
   const pct = totalTime > 0 ? Math.round((doneTime / totalTime) * 100) : 0;
 
+  // Нормоконтроль по заказу
+  const factTime  = allTasks.filter(t=>t.status==='done').reduce((s,t) => s + (t.actualTime||0), 0);
+  const overOps   = allTasks.filter(t=>t.status==='done' && t.actualTime && t.actualTime > t.time * 1.15);
+  const overTotal = overOps.reduce((s,t) => s + (t.actualTime - t.time * t.completed), 0);
+  const normPct   = doneTime > 0 && factTime > 0 ? Math.round(factTime / doneTime * 100) : null;
+
   const STATUS_CLS = { plan:'wait', in_work:'prog', done:'done' };
   const STATUS_LBL = { plan:'Планируется', in_work:'В работе', done:'Выполнен' };
 
@@ -60,7 +66,7 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
       <OrderPicker orders={data.orders} activeId={activeId}
         onSelect={setActiveId} onNew={onNewOrder} lang={lang}/>
 
-      <div className="grid-4" style={{ marginBottom: 'var(--density-section-gap)' }}>
+      <div className="kpi-scroll grid-4" style={{ marginBottom: 'var(--density-section-gap)' }}>
         <div className="kpi accent">
           <div className="kpi-label">{S.active}</div>
           <div className="kpi-value num mono">{order.number}</div>
@@ -80,10 +86,16 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
           <div className="kpi-value num">{doneCt}<span className="unit">{S.ops}</span></div>
           <div className="kpi-meta"><span>{pct}% {lang === 'en' ? 'complete' : 'выполнено'}</span></div>
         </div>
-        <div className="kpi">
-          <div className="kpi-label">{S.overdue}</div>
-          <div className="kpi-value num">{overdue > 0 ? 1 : 0}<span className="unit">{lang === 'en' ? 'part' : 'дет.'}</span></div>
-          <div className="kpi-meta"><span className="dn">{lang === 'en' ? 'check op. 60' : 'проверить оп. 60'}</span></div>
+        <div className="kpi" style={{ borderLeft: overOps.length > 0 ? '2px solid var(--danger)' : undefined }}>
+          <div className="kpi-label">Нормоконтроль</div>
+          <div className="kpi-value num" style={{ color: normPct > 115 ? 'var(--danger)' : normPct > 100 ? 'var(--warning,#c07820)' : 'var(--st-done-line)' }}>
+            {normPct ? normPct + '%' : '—'}
+          </div>
+          <div className="kpi-meta">
+            {overOps.length > 0
+              ? <span style={{color:'var(--danger)'}}>{overOps.length} оп. превышение +{Math.round(overTotal)}′</span>
+              : <span style={{color:'var(--st-done-line)'}}>в норме</span>}
+          </div>
         </div>
       </div>
 
@@ -140,19 +152,73 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
   );
 }
 
+function TimePill({ planMin, startedAt, status, actualTime }) {
+  const [elapsed, setElapsed] = React.useState(0);
+
+  React.useEffect(() => {
+    if (status !== 'in_progress' || !startedAt) return;
+    const calc = () => setElapsed(Math.round((Date.now() - new Date(startedAt).getTime()) / 60000));
+    calc();
+    const id = setInterval(calc, 30000);
+    return () => clearInterval(id);
+  }, [startedAt, status]);
+
+  if (status === 'done' && actualTime) {
+    const over = actualTime - planMin;
+    const pct  = Math.round(actualTime / planMin * 100);
+    const color = over > planMin * 0.15 ? 'var(--danger)' : over > 0 ? 'var(--warning,#c07820)' : 'var(--st-done-line)';
+    return (
+      <div style={{ textAlign:'center', fontSize:10, lineHeight:1.3 }}>
+        <div className="num" style={{ color, fontWeight:600 }}>{actualTime}′</div>
+        <div style={{ fontSize:9, color:'var(--fg-2)' }}>пл {planMin}′ · {pct > 100 ? '+' : ''}{pct - 100}%</div>
+      </div>
+    );
+  }
+  if (status === 'in_progress' && startedAt) {
+    const over = elapsed - planMin;
+    const color = elapsed > planMin ? 'var(--danger)' : 'var(--accent)';
+    return (
+      <div style={{ textAlign:'center', fontSize:10, lineHeight:1.3 }}>
+        <div className="num" style={{ color, fontWeight:600 }}>{elapsed}′</div>
+        <div style={{ fontSize:9, color:'var(--fg-2)' }}>пл {planMin}′{over > 0 ? <span style={{color:'var(--danger)'}}> +{over}′</span> : ''}</div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ textAlign:'center', fontSize:10, color:'var(--fg-2)' }}>
+      <div>{planMin}′</div>
+    </div>
+  );
+}
+
 function DetailBoardGroup({ detail, tasks, done, total, qty, lang, onCloseTask }) {
   const S = useStrings(lang);
   const pct = total > 0 ? (done / total) * 100 : 0;
+
+  // Нормоконтроль: план vs факт по детали
+  const planMin   = tasks.reduce((s,t) => s + t.time * t.planned, 0);
+  const factMin   = tasks.filter(t=>t.status==='done').reduce((s,t) => s + (t.actualTime||t.time*t.completed), 0);
+  const overMin   = factMin - tasks.filter(t=>t.status==='done').reduce((s,t) => s + t.time*t.completed, 0);
+  const hasOver   = tasks.some(t => t.status==='done' && t.actualTime && t.actualTime > t.time * 1.15);
+
   return (
     <div className="board-group">
       <div className="board-grp-head">
         <Icon name="box" size={16} className="muted" />
-        <div>
+        <div style={{ flex:1 }}>
           <div className="board-grp-title">{detail.name}</div>
-          <div className="row" style={{ gap: 8, marginTop: 2 }}>
+          <div className="row" style={{ gap: 8, marginTop: 2, flexWrap:'wrap' }}>
             <span className="board-grp-code">{detail.code}</span>
             <span className="muted" style={{ fontSize: 11 }}>{S.qtyShort}: <b className="num">{qty}</b> {S.pcs}</span>
-            <span className="muted" style={{ fontSize: 11 }}>{detail.drawing}</span>
+            {detail.drawing && <span className="muted" style={{ fontSize: 11 }}>{detail.drawing}</span>}
+            {factMin > 0 && (
+              <span className="num" style={{ fontSize:10,
+                color: hasOver ? 'var(--danger)' : 'var(--st-done-line)',
+                fontWeight: hasOver ? 600 : 400 }}>
+                ⏱ {Math.round(factMin)}′ / {planMin}′
+                {hasOver && <span style={{color:'var(--danger)'}}> ↑</span>}
+              </span>
+            )}
           </div>
         </div>
         <div className="board-progress">
@@ -162,7 +228,8 @@ function DetailBoardGroup({ detail, tasks, done, total, qty, lang, onCloseTask }
       </div>
       <div>
         {tasks.map(t => (
-          <div key={t.id} className={'task-row ' + (t.status === 'done' ? 'done' : '')}>
+          <div key={t.id} className={'task-row ' + (t.status === 'done' ? 'done' : '')
+            + (t.status==='done' && t.actualTime && t.actualTime > t.time * 1.15 ? ' overdue-row' : '')}>
             <div className="op-num">{String(t.opNum).padStart(3, '0')}</div>
             <div>
               <div className="task-name">{t.opName}</div>
@@ -172,14 +239,8 @@ function DetailBoardGroup({ detail, tasks, done, total, qty, lang, onCloseTask }
               <span className="num">{t.completed}/{t.planned}</span>
               <span className="bar"><span className="fill" style={{ width: (t.completed / t.planned) * 100 + '%' }} /></span>
             </div>
-            <div style={{ textAlign:'center', fontSize:11, color:'var(--fg-2)', fontFamily:'var(--mono-font)' }}>
-              <div>{t.time}'</div>
-              {t.startedAt && t.status === 'in_progress' && (
-                <div style={{ fontSize:9, color:'var(--accent)' }}>
-                  {Math.round((Date.now() - new Date(t.startedAt).getTime()) / 60000)}м
-                </div>
-              )}
-            </div>
+            <TimePill planMin={t.time * t.planned} startedAt={t.startedAt}
+              status={t.status} actualTime={t.actualTime} />
             <div style={{ fontSize: 11, color: 'var(--fg-1)' }}>{t.operator || <span className="muted">—</span>}</div>
             <div className="actions">
               <StatusPill status={t.status} lang={lang} />
@@ -922,18 +983,28 @@ function WorkshopView({ workshops, tasks, lang, onManage }) {
   }, [selId, days]);
 
   // Задания цеха из frontend state (для живого обновления)
-  const workshopTasks = React.useMemo(() =>
-    tasks.filter(t => t.workshopId == selId || String(t.workshopId) === String(selId)),
-    [tasks, selId]
-  );
+  // Загружаем workshop_id заказов для фолбека (задания без прямого workshop_id)
+  const workshopTasks = React.useMemo(() => {
+    if (!selId) return [];
+    const sid = String(selId);
+    return tasks.filter(t => {
+      // Прямой workshop_id у задания
+      if (t.workshopId && String(t.workshopId) === sid) return true;
+      return false;
+    });
+  }, [tasks, selId]);
 
   const wStats = React.useMemo(() => {
-    const total = workshopTasks.length;
-    const done  = workshopTasks.filter(t=>t.status==='done').length;
-    const prog  = workshopTasks.filter(t=>t.status==='in_progress').length;
-    const pct   = total > 0 ? Math.round(done*100/total) : 0;
+    const total   = workshopTasks.length;
+    const done    = workshopTasks.filter(t=>t.status==='done').length;
+    const prog    = workshopTasks.filter(t=>t.status==='in_progress').length;
+    const pct     = total > 0 ? Math.round(done*100/total) : 0;
     const planMin = workshopTasks.reduce((s,t) => s + t.time * t.planned, 0);
-    return { total, done, prog, pct, planMin };
+    // Нормоконтроль по цеху
+    const factMin = workshopTasks.filter(t=>t.status==='done' && t.actualTime).reduce((s,t)=>s+t.actualTime,0);
+    const overOps = workshopTasks.filter(t=>t.status==='done' && t.actualTime && t.actualTime > t.time * 1.15);
+    const normPct = planMin > 0 && factMin > 0 ? Math.round(factMin / workshopTasks.filter(t=>t.status==='done').reduce((s,t)=>s+t.time*t.completed,0) * 100) : null;
+    return { total, done, prog, pct, planMin, factMin, overOps, normPct };
   }, [workshopTasks]);
 
   // Группировка по рабочим центрам из frontend state
@@ -1023,6 +1094,17 @@ function WorkshopView({ workshops, tasks, lang, onManage }) {
               <div className="kpi-value num">{Math.round(wStats.planMin/60)}<span className="unit">ч</span></div>
               <div className="kpi-meta">{wStats.planMin % 60} мин</div>
             </div>
+            {wStats.normPct && (
+              <div className="kpi" style={{ borderLeft: wStats.overOps.length > 0 ? '2px solid var(--danger)' : undefined }}>
+                <div className="kpi-label">Нормоконтроль</div>
+                <div className="kpi-value num" style={{ color: wStats.normPct > 115 ? 'var(--danger)' : wStats.normPct > 100 ? 'var(--warning,#c07820)' : 'var(--st-done-line)' }}>
+                  {wStats.normPct}%
+                </div>
+                <div className="kpi-meta" style={{ color: wStats.overOps.length > 0 ? 'var(--danger)' : 'var(--fg-2)' }}>
+                  {wStats.overOps.length > 0 ? `${wStats.overOps.length} превышений` : 'в норме'}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Загрузка рабочих центров */}
@@ -1571,7 +1653,7 @@ function OrdersListView({ data, tasks, lang, onOpenOrder }) {
 // Общий отчёт по заказам
 // =======================================================
 
-function ReportView({ data, tasks, scanLog, lang }) {
+function ReportView({ data, tasks, scanLog, lang, onOpenDashboard }) {
   const [period,   setPeriod]   = React.useState('all');
   const [sortBy,   setSortBy]   = React.useState('number');
   const [filterSt, setFilterSt] = React.useState('all');
@@ -1795,7 +1877,8 @@ function ReportView({ data, tasks, scanLog, lang }) {
           </thead>
           <tbody>
             {filtered.map(o => (
-              <tr key={o.id} className="row-hover" style={{ opacity: o.status==='done' ? .7 : 1 }}>
+              <tr key={o.id} className="row-hover" style={{ opacity: o.status==='done' ? .7 : 1, cursor:'pointer' }}
+                onClick={()=> onOpenDashboard && onOpenDashboard(o.id)}>
                 <td>
                   <span className="mono" style={{ fontWeight:700, color:'var(--accent)' }}>{o.number}</span>
                   {o.foreman && <div style={{ fontSize:10, color:'var(--fg-2)' }}>{o.foreman}</div>}

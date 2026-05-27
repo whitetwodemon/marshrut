@@ -167,6 +167,18 @@ class TasksController
                 'completed'      => $completed,
             ]);
 
+            // Автоматически переводим заказ в «done» если все задания выполнены
+            $remaining = $db->prepare(
+                'SELECT COUNT(*) FROM tasks WHERE order_id = :oid AND status NOT IN ("done","rejected","cancelled")'
+            );
+            $remaining->execute([':oid' => $task['order_id']]);
+            if ((int)$remaining->fetchColumn() === 0) {
+                $db->prepare(
+                    'UPDATE orders SET status = "done" WHERE id = :oid AND status NOT IN ("cancelled","done")'
+                )->execute([':oid' => $task['order_id']]);
+                \Marshrut\app_log('info', 'order.auto_done', ['order_id' => $task['order_id']]);
+            }
+
             $db->commit();
         } catch (\Exception $e) {
             $db->rollBack();

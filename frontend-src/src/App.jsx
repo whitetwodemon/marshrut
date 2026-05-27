@@ -221,6 +221,7 @@ function App() {
       if (action === 'start') {
         await api.patch('/tasks/'+taskId+'/status', { status:'in_progress', operator:op });
       } else {
+        if (navigator.vibrate) navigator.vibrate([100]);
         await api.post('/tasks/'+taskId+'/close', {
           operator: op,
           qr_text:  qrText,
@@ -231,6 +232,7 @@ function App() {
         // If rejected/paused/rework — update task status separately
         if (closeStatus && closeStatus !== 'done') {
           await api.patch('/tasks/'+taskId+'/status', { status: closeStatus, operator: op });
+        if (navigator.vibrate) navigator.vibrate([50, 30, 80]);
         }
       }
       setTasks(prev=>prev.map(t=>t.id===taskId?{...t,status:action==='start'?'in_progress':'done',completed:action==='start'?t.completed:(qty??t.planned),operator:op}:t));
@@ -388,10 +390,12 @@ function App() {
           {route === 'workshop' && <WorkshopView workshops={workshops} tasks={tasks} lang={t.lang}
             onManage={()=>setModal('manageWorkshops')}/>}
           {route === 'history' && <HistoryView data={data} tasks={tasks} scanLog={scanLog} lang={t.lang}/>}
-          {route === 'report'  && <ReportView  data={data} tasks={tasks} scanLog={scanLog} lang={t.lang}/>}
+          {route === 'report'  && <ReportView  data={data} tasks={tasks} scanLog={scanLog} lang={t.lang}
+            onOpenDashboard={id => { setActiveOrderId(id); setRoute('dashboard'); }}/>}
         </div>
       </div>
 
+      <div id="ptr-ind" className="ptr-indicator" style={{opacity:0}}>↓ Обновление…</div>
       <div className="toast-stack">{toasts.map(toast=>(<div className="toast" key={toast.id}>{toast.msg}</div>))}</div>
 
       <EquipmentDatalist/>
@@ -412,6 +416,9 @@ function App() {
       )}
 
       {/* Мобильная нижняя навигация */}
+      <button className="fab-scan" onClick={()=>setRoute('scanner')} style={{display: route==='scanner'?'none':undefined}}>
+        <Icon name="scan" size={22}/>
+      </button>
       <nav className="mobile-nav">
         {[
           ['dashboard', 'home',    'Табло',     counts.inProgress],
