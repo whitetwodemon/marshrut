@@ -1,4 +1,22 @@
 <?php
+/**
+ * OrdersController.php — CRUD заказов и генерация заданий
+ *
+ * Маршруты:
+ *   GET    /api/orders           — список заказов (с фильтром по статусу)
+ *   GET    /api/orders/{id}      — один заказ с позициями
+ *   POST   /api/orders           — создать заказ + сгенерировать задания
+ *   PUT    /api/orders/{id}      — обновить заказ
+ *   DELETE /api/orders/{id}      — удалить заказ и все задания
+ *   POST   /api/orders/{id}/add-task — добавить операцию в существующий заказ
+ *   POST   /api/orders/next-number   — сгенерировать следующий номер (W/D/K)
+ *
+ * Логика generateTasks():
+ *   При создании заказа для каждой позиции (деталь × количество) создаётся
+ *   набор заданий по операциям из техкарты детали. Каждое задание привязывается
+ *   к рабочему центру и получает уникальный QR код.
+ */
+
 // src/Controllers/OrdersController.php
 
 namespace Marshrut\Controllers;
@@ -20,8 +38,9 @@ class OrdersController
         $limit  = max(1, min(200, (int)($_GET['limit']  ?? 100)));
         $offset = max(0, (int)($_GET['offset'] ?? 0));
 
-        $where = $status !== '' ? ' WHERE status = :status' : '';
-        $args  = $status !== '' ? [':status' => $status] : [];
+        $statusAll = ($status === 'all' || $status === '');
+        $where = !$statusAll ? ' WHERE status = :status' : '';
+        $args  = !$statusAll ? [':status' => $status] : [];
 
         $total = $db->prepare("SELECT COUNT(*) FROM orders{$where}");
         $total->execute($args);
@@ -278,6 +297,68 @@ class OrdersController
                 ':qty'  => (int) $row['quantity'],
                 ':qr'   => $qr,
             ]);
+        }
+    }
+
+    // POST /api/orders/{id}/add-task — добавить операцию в существующий заказ
+    public static function addTask(array $params): void
+    {
+        $db   = Connection::get();
+        $body = request_body();
+
+        if (empty($body['detail_id']) || empty($body['op_name']) || empty($body['work_center'])) {
+            json_out(['error' => 'detail_id, op_name, work_center обязательны'], 422);
+        }
+
+        // Проверяем заказ
+        $order = $db->prepare('SELECT * FROM orders WHERE id = :id');
+        $order->execute([':id' => $params['id']]);
+        $order = $order->fetch();
+        if (!$order) json_out(['error' => 'Order not found'], 404);
+
+        $orderId  = $params['id'];
+        $orderNum = str_starts_with($orderId, 'O-') ? substr($orderId, 2) : $orderId;
+        $detId    = sanitize_string($body['detail_id'], 20);
+        $detNum   = str_starts_with($detId, 'D-') ? substr($detId, 2) : $detId;
+        $opNum    = (int) ($body['op_num'] ?? 10);
+        $opName   = sanitize_string($body['op_name'], 255);
+        $wc       = sanitize_string($body['work_center'], 100);
+        $timeMin  = (int) ($body['time_min'] ?? 0);
+
+        // Найти количество деталей из order_items
+        $qi = $db->prepare('SELECT quantity FROM order_items WHERE order_id=:oid AND detail_id=:did');
+        $qi->execute([':oid' => $orderId, ':did' => $detId]);
+        $qty = (int) ($qi->fetchColumn() ?: 1);
+
+        $taskId = "OT-{$orderNum}-{$detNum}-{$opNum}";
+        $qr     = "OTASK:{$orderNum}-{$detNum}-{$opNum}";
+
+        // Найти work_center_id если есть
+        $wcId = null;
+        $wcRow = $db->prepare('SELECT id FROM work_centers WHERE code = :code LIMIT 1');
+        $wcRow->execute([':code' => $wc]);
+        $wcId = $wcRow->fetchColumn() ?: null;
+
+        try {
+            $db->prepare(
+                'INSERT INTO tasks (id, order_id, detail_id, op_num, op_name, work_center, work_center_id, time_min, planned, qr_text, status)
+                 VALUES (:id, :oid, :did, :num, :name, :wc, :wcid, :time, :planned, :qr, "waiting")'
+            )->execute([
+                ':id'      => $taskId,
+                ':oid'     => $orderId,
+                ':did'     => $detId,
+                ':num'     => $opNum,
+                ':name'    => $opName,
+                ':wc'      => $wc,
+                ':wcid'    => $wcId,
+                ':time'    => $timeMin,
+                ':planned' => $qty,
+                ':qr'      => $qr,
+            ]);
+            app_log('info', 'task.added_manually', ['task_id' => $taskId, 'order_id' => $orderId]);
+            json_out(['id' => $taskId, 'op_num' => $opNum, 'op_name' => $opName, 'work_center' => $wc]);
+        } catch (\Exception $e) {
+            json_out(['error' => $e->getMessage()], 500);
         }
     }
 }

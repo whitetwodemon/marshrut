@@ -58,3 +58,30 @@ $pdo->prepare(
 ]);
 
 echo "[create-admin] ✓ Admin created: {$adminEmail} / {$adminPassword}\n";
+
+// ── Создаём тестовых пользователей если их нет ──────────────────────────
+$testPassword = getenv('TEST_PASSWORD') ?: 'Test1234!';
+$testHash     = password_hash($testPassword, PASSWORD_BCRYPT, ['cost' => 10]);
+
+$testUsers = [
+    ['name' => 'Колесников П.А.',  'email' => 'foreman@marshrut.local',   'role_id' => 2],
+    ['name' => 'Гаврилов А.Б.',    'email' => 'operator1@marshrut.local', 'role_id' => 3],
+    ['name' => 'Семёнов И.Н.',     'email' => 'operator2@marshrut.local', 'role_id' => 3],
+    ['name' => 'Орлов Д.С.',       'email' => 'operator3@marshrut.local', 'role_id' => 3],
+    ['name' => 'Наблюдатель',      'email' => 'viewer@marshrut.local',    'role_id' => 4],
+];
+
+$insertUser = $pdo->prepare(
+    'INSERT IGNORE INTO users (name, email, password_hash, role_id, is_active) VALUES (:name, :email, :hash, :role, 1)'
+);
+
+foreach ($testUsers as $u) {
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = :email');
+    $stmt->execute([':email' => $u['email']]);
+    if (!$stmt->fetch()) {
+        $insertUser->execute([':name' => $u['name'], ':email' => $u['email'], ':hash' => $testHash, ':role' => $u['role_id']]);
+        echo "[create-admin] ✓ User created: {$u['email']} / {$testPassword}\n";
+    }
+}
+echo "[create-admin] ✓ Test users ready\n";
+

@@ -95,7 +95,7 @@ function ModalEditOrder({ lang, order, details, workshops, onClose, onSaved }) {
   const updateItem = (idx,k,v) => setItems(p=>p.map((it,i)=>i===idx?{...it,[k]:v}:it));
 
   async function handleSave() {
-    if (!number||!customer||!dueDate) { setErr(isEn?'Fill required fields':'Заполните обязательные поля'); return; }
+    if (!number||!dueDate) { setErr(isEn?'Fill required fields':'Заполните обязательные поля'); return; }
     setSaving(true); setErr('');
     try {
       await api.put('/orders/'+order.id, {
@@ -129,14 +129,14 @@ function ModalEditOrder({ lang, order, details, workshops, onClose, onSaved }) {
           <div className="field"><span className="field-label">{isEn?'Due date *':'Срок *'}</span><input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></div>
           <div className="field"><span className="field-label">{isEn?'Foreman':'Ст. мастер'}</span><input className="input" value={foreman} onChange={e=>setForeman(e.target.value)}/></div>
         </div>
-        <div className="field"><span className="field-label">{isEn?'Customer *':'Получатель *'}</span><input className="input" value={customer} onChange={e=>setCustomer(e.target.value)}/></div>
+        <div className="field"><span className="field-label">Назначение</span><input className="input" value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Необязательно"/></div>
         <div className="grid-2" style={{ gap:10 }}>
           <div className="field">
-            <span className="field-label">Цех</span>
+            <span className="field-label">Рабочий центр заказа</span>
             <select className="select" value={workshopId} onChange={e=>setWorkshopId(e.target.value)}>
               <option value="">Не выбран</option>
               {(workshops||[]).filter(w=>w.is_active).map(w=>(
-                <option key={w.id} value={w.id}>{w.code} — {w.name.split('—')[0].trim()}</option>
+                <option key={w.id} value={w.id}>{w.code} — {w.name}</option>
               ))}
             </select>
           </div>
@@ -183,6 +183,7 @@ function ModalEditOrder({ lang, order, details, workshops, onClose, onSaved }) {
 
 function ModalNewOrder({ lang, details, workshops, onClose, onCreated }) {
   const isEn = lang === 'en';
+  const [orderType,  setOrderType]  = React.useState('W');
   const [number,     setNumber]     = React.useState('');
   const [customer,   setCustomer]   = React.useState('');
   const [foreman,    setForeman]    = React.useState('');
@@ -194,6 +195,12 @@ function ModalNewOrder({ lang, details, workshops, onClose, onCreated }) {
   const [items,      setItems]      = React.useState([{ detailId:'', quantity:1 }]);
   const [saving,     setSaving]     = React.useState(false);
   const [err,        setErr]        = React.useState('');
+
+  // Автонумерация при открытии или смене типа
+  React.useEffect(() => {
+    api.post('/orders/next-number', { type: orderType })
+       .then(r => setNumber(r.number)).catch(()=>{});
+  }, [orderType]);
 
   const ORDER_STATUSES = [
     { v:'draft',              l:'Черновик' },
@@ -212,14 +219,14 @@ function ModalNewOrder({ lang, details, workshops, onClose, onCreated }) {
   const updateItem = (idx,k,v) => setItems(p=>p.map((it,i)=>i===idx?{...it,[k]:v}:it));
 
   async function handleSave() {
-    if (!number||!customer||!dueDate) { setErr('Заполните обязательные поля'); return; }
+    if (!number||!dueDate) { setErr('Заполните обязательные поля'); return; }
     const validItems = items.filter(i=>i.detailId);
     if (!validItems.length) { setErr('Добавьте хотя бы одну деталь'); return; }
     if (needsComment && !comment.trim()) { setErr('Укажите причину ожидания в комментарии'); return; }
     setSaving(true); setErr('');
     try {
       await api.post('/orders', {
-        number, customer, foreman,
+        number, order_type: orderType, customer, foreman,
         due_date:    dueDate,
         created_at:  new Date().toISOString().slice(0,10),
         status,
@@ -244,8 +251,18 @@ function ModalNewOrder({ lang, details, workshops, onClose, onCreated }) {
 
           {/* Основные поля */}
           <div className="grid-3" style={{ gap:10 }}>
-            <div className="field"><span className="field-label">Номер *</span>
-              <input className="input" value={number} onChange={e=>setNumber(e.target.value)} placeholder="ЗП-26-0200"/>
+            <div className="field">
+              <span className="field-label">Тип заказа</span>
+              <select className="select" value={orderType} onChange={e => setOrderType(e.target.value)}>
+                <option value="W">W — Заказ</option>
+                <option value="D">D — Доработка</option>
+                <option value="K">K — Кооперация</option>
+              </select>
+            </div>
+            <div className="field">
+              <span className="field-label">Номер (авто)</span>
+              <input className="input mono" value={number} readOnly
+                style={{ color:'var(--accent)', fontWeight:700, opacity:.85, cursor:'not-allowed' }}/>
             </div>
             <div className="field"><span className="field-label">Срок *</span>
               <input className="input" type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/>
@@ -259,8 +276,8 @@ function ModalNewOrder({ lang, details, workshops, onClose, onCreated }) {
             </div>
           </div>
 
-          <div className="field"><span className="field-label">Получатель *</span>
-            <input className="input" value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Цех №4"/>
+          <div className="field"><span className="field-label">Назначение / Получатель</span>
+            <input className="input" value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Назначение заказа (необязательно)"/>
           </div>
 
           <div className="grid-2" style={{ gap:10 }}>
@@ -778,4 +795,62 @@ function EquipmentDatalist() {
 }
 
 
-export { ModalEditDetail, ModalEditOrder, ModalNewOrder, ModalNewDetail, AdminPanel, EquipmentDatalist }
+function ModalPause({ taskId, reasons, onClose, onSaved }) {
+  const [reason, setReason] = React.useState('lunch');
+  const [note,   setNote]   = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+
+  async function handlePause() {
+    setSaving(true);
+    try {
+      await api.post('/tasks/'+taskId+'/pause', { reason, note });
+      onSaved();
+      onClose();
+    } catch(e) { alert('Ошибка: '+e.message); }
+    setSaving(false);
+  }
+
+  return (
+    <div className="modal-back" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{ maxWidth:400 }}>
+        <div className="modal-head">
+          <b>Поставить на паузу</b>
+          <button className="icon-btn" onClick={onClose}><Icon name="x" size={16}/></button>
+        </div>
+        <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div className="field">
+            <span className="field-label">Причина простоя</span>
+            <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:6 }}>
+              {(reasons||[]).map(r => (
+                <label key={r.v} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer',
+                  padding:'8px 12px', borderRadius:8, border:'1px solid',
+                  borderColor: reason===r.v ? 'var(--accent)' : 'var(--line-1)',
+                  background: reason===r.v ? 'rgba(var(--accent-rgb,217 72 15),.08)' : 'var(--bg-1)',
+                  fontSize:13 }}>
+                  <input type="radio" value={r.v} checked={reason===r.v}
+                    onChange={()=>setReason(r.v)} style={{ accentColor:'var(--accent)' }}/>
+                  {r.l}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <span className="field-label">Комментарий (необязательно)</span>
+            <input className="input" value={note} onChange={e=>setNote(e.target.value)}
+              placeholder="Уточнение…"/>
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>Отмена</button>
+          <button className="btn primary" onClick={handlePause} disabled={saving}
+            style={{ background:'var(--warning,#c07820)', borderColor:'var(--warning,#c07820)' }}>
+            {saving ? 'Сохранение…' : '⏸ Поставить на паузу'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+export { ModalEditDetail, ModalEditOrder, ModalNewOrder, ModalNewDetail, AdminPanel, EquipmentDatalist, ModalPause }

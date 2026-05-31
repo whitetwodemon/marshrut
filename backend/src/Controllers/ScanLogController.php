@@ -1,4 +1,20 @@
 <?php
+/**
+ * ScanLogController.php — Журнал сканирований ОТК
+ *
+ * Маршруты:
+ *   GET /api/scan-log  — журнал (последние N записей, ?limit=50)
+ *
+ * Каждая запись содержит:
+ *   - task_id, qr_text   — какая операция была отсканирована
+ *   - operator           — кто выполнил операцию
+ *   - quantity, batch_num — сколько деталей, номер партии (для частичной сдачи)
+ *   - actual_time_min    — фактическое время на операцию
+ *   - scanned_at         — timestamp
+ *
+ * TODO: Добавить пагинацию (сейчас возвращает всё без ограничения)
+ */
+
 // src/Controllers/ScanLogController.php
 
 namespace Marshrut\Controllers;

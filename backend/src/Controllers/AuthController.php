@@ -1,4 +1,20 @@
 <?php
+/**
+ * AuthController.php — Авторизация и управление сессиями
+ *
+ * Маршруты:
+ *   POST /api/auth/login    — вход (email + password → JWT)
+ *   POST /api/auth/register — регистрация
+ *   POST /api/auth/refresh  — обновить access token через HttpOnly cookie
+ *   POST /api/auth/logout   — выход (инвалидировать refresh token)
+ *   GET  /api/auth/me       — данные текущего пользователя
+ *
+ * Безопасность:
+ *   - Access token: JWT, 1 час, хранится в памяти JS
+ *   - Refresh token: UUID, 30 дней, HttpOnly cookie (недоступен JS)
+ *   - Rate limiting: max 5 попыток/час с одного IP
+ */
+
 // src/Controllers/AuthController.php
 
 namespace Marshrut\Controllers;
@@ -43,10 +59,11 @@ class AuthController
             json_out(['error' => 'Аккаунт деактивирован'], 403);
         }
 
+        // Обновляем время последнего входа
         $db->prepare('UPDATE users SET last_login = NOW() WHERE id = :id')
            ->execute([':id' => $user['id']]);
 
-        // Clear failed attempts on successful login
+        // Сбрасываем счётчик неудачных попыток при успешном входе
         RateLimit::clearOnSuccess($email);
 
         $permissions = Auth::loadPermissions((int) $user['id']);

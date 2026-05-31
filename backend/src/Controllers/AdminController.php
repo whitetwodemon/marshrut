@@ -1,4 +1,22 @@
 <?php
+/**
+ * AdminController.php — Управление пользователями и ролями
+ *
+ * Маршруты:
+ *   GET    /api/admin/users         — список пользователей
+ *   POST   /api/admin/users         — создать пользователя
+ *   PUT    /api/admin/users/{id}    — обновить пользователя
+ *   DELETE /api/admin/users/{id}    — удалить пользователя
+ *   GET    /api/admin/roles         — список ролей
+ *   PUT    /api/admin/roles/{id}/permissions — обновить права роли
+ *
+ * Роли:
+ *   admin   — полный доступ
+ *   foreman — старший мастер (создание/редактирование заказов)
+ *   operator — оператор (только выполнение операций)
+ *   viewer  — наблюдатель (только чтение)
+ */
+
 // src/Controllers/AdminController.php
 
 namespace Marshrut\Controllers;

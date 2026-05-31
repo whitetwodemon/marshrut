@@ -20,6 +20,7 @@ WORKDIR /var/www/api
 COPY backend/composer.json ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY backend/ .
+COPY migrations/ /var/www/migrations/
 
 COPY docker/php-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

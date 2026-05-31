@@ -15,13 +15,16 @@ use Marshrut\Middleware\Cors;
 use Marshrut\Middleware\Auth;
 use Marshrut\Controllers\AuthController;
 use Marshrut\Controllers\AdminController;
-use Marshrut\Controllers\DashboardController;
 use Marshrut\Controllers\DetailsController;
 use Marshrut\Controllers\OrdersController;
 use Marshrut\Controllers\TasksController;
 use Marshrut\Controllers\ScanLogController;
 use Marshrut\Controllers\EventsController;
 use Marshrut\Controllers\WorkshopsController;
+use Marshrut\Controllers\WorkCentersController;
+use Marshrut\Controllers\PausesController;
+use Marshrut\Controllers\ShiftsController;
+use Marshrut\Controllers\HealthController;
 
 Cors::handle();
 
@@ -54,7 +57,6 @@ $r->add('PUT',    '/api/admin/roles/{id}/permissions', [AdminController::class, 
 $r->add('GET',    '/api/admin/permissions',            [AdminController::class, 'listPermissions']);
 
 // Dashboard
-$r->add('GET', '/api/dashboard', function($p) { Auth::require(); DashboardController::index($p); });
 
 // Details
 $r->add('GET',    '/api/details',       function($p) { Auth::require();             DetailsController::index($p); });
@@ -92,6 +94,36 @@ $r->add('GET',    '/api/workshops/{id}/equipment', function($p) { Auth::require(
 $r->add('POST',   '/api/workshops/{id}/equipment', function($p) { Auth::can('orders.edit'); WorkshopsController::addEquipment($p); });
 $r->add('DELETE', '/api/equipment/{id}',           function($p) { Auth::can('orders.edit'); WorkshopsController::deleteEquipment($p); });
 $r->add('GET',    '/api/equipment',                function($p) { Auth::require();          WorkshopsController::allEquipment($p); });
+
+// Add task to existing order
+$r->add('POST', '/api/orders/{id}/add-task', function($p) { Auth::can('orders.edit'); OrdersController::addTask($p); });
+
+// Work Centers
+$r->add('GET',    '/api/work-centers',         function($p) { Auth::require();          WorkCentersController::index($p); });
+$r->add('POST',   '/api/work-centers',         function($p) { Auth::can('orders.edit'); WorkCentersController::create($p); });
+$r->add('PUT',    '/api/work-centers/{id}',    function($p) { Auth::can('orders.edit'); WorkCentersController::update($p); });
+$r->add('DELETE', '/api/work-centers/{id}',    function($p) { Auth::can('orders.edit'); WorkCentersController::delete($p); });
+$r->add('GET',    '/api/work-centers/{id}/order-priority', function($p) { Auth::require();          WorkCentersController::getPriority($p); });
+$r->add('POST',   '/api/work-centers/{id}/order-priority', function($p) { Auth::can('orders.edit'); WorkCentersController::setPriority($p); });
+$r->add('GET',    '/api/work-centers/{id}/tasks', function($p) { Auth::require();       WorkCentersController::tasks($p); });
+$r->add('POST',   '/api/orders/next-number',   function($p) { Auth::require();          WorkCentersController::nextOrderNumber($p); });
+
+// Healthcheck (без авторизации)
+$r->add('GET', '/api/health', function($p) { HealthController::check($p); });
+
+// Shifts
+$r->add('GET',  '/api/shifts/by-date',       function($p) { Auth::require(); ShiftsController::byDate($p); });
+$r->add('GET',  '/api/shifts',              function($p) { Auth::require();       ShiftsController::index($p); });
+$r->add('GET',  '/api/shifts/active',       function($p) { Auth::require();       ShiftsController::active($p); });
+$r->add('POST', '/api/shifts/open',         function($p) { Auth::require();       ShiftsController::open($p); });
+$r->add('POST', '/api/shifts/{id}/close',   function($p) { Auth::require();       ShiftsController::close($p); });
+$r->add('POST', '/api/shifts/{id}/handoff', function($p) { Auth::require();       ShiftsController::handoff($p); });
+$r->add('GET',  '/api/shifts/{id}/report',  function($p) { Auth::require();       ShiftsController::report($p); });
+
+// Task pauses
+$r->add('POST',   '/api/tasks/{id}/pause',     function($p) { Auth::require(); PausesController::start($p); });
+$r->add('POST',   '/api/tasks/{id}/resume',    function($p) { Auth::require(); PausesController::end($p); });
+$r->add('GET',    '/api/tasks/{id}/pauses',    function($p) { Auth::require(); PausesController::list($p); });
 
 // SSE — real-time events (token via query param since EventSource has no headers)
 $r->add('GET', '/api/events', [EventsController::class, 'stream']);

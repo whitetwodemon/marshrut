@@ -91,6 +91,21 @@ const Icon = ({ name, size = 16, className, style }) => {
         <rect x="10" y="13" width="4" height="4"/>
       </svg>
     );
+    case 'archive': return (
+      <svg {...props}><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+    );
+    case 'pause': return (
+      <svg {...props}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    );
+    case 'play': return (
+      <svg {...props}><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    );
+    case 'history': return (
+      <svg {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    );
+    case 'chevron-up': return (
+      <svg {...props}><polyline points="18 15 12 9 6 15"/></svg>
+    );
     case 'grid': return (
       <svg {...props}>
         <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -220,23 +235,6 @@ const Icon = ({ name, size = 16, className, style }) => {
       <svg {...props}>
         <path d="M3.5 7l8.5-3.5L20.5 7v10L12 20.5 3.5 17z" />
         <path d="M3.5 7l8.5 4 8.5-4M12 11v9.5" />
-      </svg>
-    );
-    case 'history': return (
-      <svg {...props}>
-        <path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.5M3 4v3.5H6.5" />
-        <path d="M12 7v5l3.5 2" />
-      </svg>
-    );
-    case 'play': return (
-      <svg {...props}>
-        <path d="M7 5l11 7-11 7z" fill="currentColor" />
-      </svg>
-    );
-    case 'pause': return (
-      <svg {...props}>
-        <rect x="6" y="5" width="4" height="14" fill="currentColor" stroke="none" />
-        <rect x="14" y="5" width="4" height="14" fill="currentColor" stroke="none" />
       </svg>
     );
     case 'cross-x': return (

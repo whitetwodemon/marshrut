@@ -1,4 +1,18 @@
 <?php
+/**
+ * DetailsController.php — Номенклатура деталей и техкарты
+ *
+ * Маршруты:
+ *   GET    /api/details       — список деталей с операциями
+ *   GET    /api/details/{id}  — одна деталь
+ *   POST   /api/details       — создать деталь
+ *   PUT    /api/details/{id}  — обновить деталь + операции (весь PUT)
+ *   DELETE /api/details/{id}  — удалить деталь
+ *
+ * Техкарта (operations) обновляется целиком при PUT.
+ * Операции привязаны к рабочим центрам по коду (101, 104, ...).
+ */
+
 // src/Controllers/DetailsController.php
 
 namespace Marshrut\Controllers;

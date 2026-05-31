@@ -395,16 +395,26 @@ function useStrings(lang) {
 // =======================================================
 // Sidebar
 // =======================================================
-function Sidebar({ route, setRoute, lang, counts }) {
+function Sidebar({ route, setRoute, lang, counts, userRole }) {
   const S = useStrings(lang);
-  const items = [
-    { id: 'dashboard', label: S.navDash, icon: 'gauge', badge: counts.inProgress },
-    { id: 'orders', label: S.navOrders, icon: 'orders', badge: counts.orders },
-    { id: 'library', label: S.navLibrary, icon: 'library' },
-    { id: 'scanner', label: S.navScan, icon: 'scan' },
-    { id: 'workshop', label: 'Цеха', icon: 'building' },
-    { id: 'history', label: S.navHistory, icon: 'history' },
+  // Фильтруем пункты меню по роли пользователя
+  // Элементы с полем roles показываются только указанным ролям
+  const allItems = [
+    { id: 'dashboard',      label: S.navDash,          icon: 'gauge',   badge: counts.inProgress },
+    { id: 'orders',         label: S.navOrders,         icon: 'orders',  badge: counts.orders },
+    { id: 'orders-list',    label: 'Все заказы',        icon: 'list' },
+    { id: 'work-centers',   label: 'Рабочие центры',    icon: 'building' },
+    { id: 'library',        label: S.navLibrary,        icon: 'library' },
+    { id: 'scanner',        label: S.navScan,           icon: 'scan' },
+    { id: 'history',        label: S.navHistory,        icon: 'history' },
+    { id: 'shifts',         label: 'Смены',              icon: 'clock' },
+    { id: 'shift-report',   label: 'Учёт по сменам',    icon: 'chart', roles: ['admin','foreman'] },
+    { id: 'history-orders', label: 'История заказов',   icon: 'archive' },
+    { id: 'report',         label: S.navReport,         icon: 'chart' },
+    { id: 'excel',          label: 'Выгрузки Excel',     icon: 'table' },
+    { id: 'wiki',           label: 'Справка',             icon: 'library' },
   ];
+  const items = allItems.filter(it => !it.roles || !userRole || it.roles.includes(userRole));
   return (
     <aside className="sidebar">
       <div className="sidebar-head">
@@ -417,7 +427,7 @@ function Sidebar({ route, setRoute, lang, counts }) {
 
       <div className="sidebar-section">{S.navOps}</div>
       <div className="sidebar-nav">
-        {items.slice(0, 4).map(it => (
+        {items.slice(0, 6).map(it => (
           <button
             key={it.id}
             className={'nav-item ' + (route === it.id ? 'active' : '')}
@@ -430,9 +440,9 @@ function Sidebar({ route, setRoute, lang, counts }) {
         ))}
       </div>
 
-      <div className="sidebar-section">{S.navOps2}</div>
+      <div className="sidebar-section">Аналитика</div>
       <div className="sidebar-nav">
-        {[items[4]].map(it => (
+        {items.slice(6).map(it => (
           <button
             key={it.id}
             className={'nav-item ' + (route === it.id ? 'active' : '')}

@@ -12,6 +12,8 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
   const streamRef  = React.useRef(null);
   const rafRef     = React.useRef(null);
   const lastScanRef = React.useRef({ text: '', at: 0 });
+  const [doneTaskInfo, setDoneTaskInfo] = React.useState(null);
+  const [pauseTask, setPauseTask] = React.useState(null);
 
   const [cameraOn,    setCameraOn]    = React.useState(false);
   const [cameraError, setCameraError] = React.useState(null);
@@ -79,7 +81,31 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
     };
   }, [cameraOn]);
 
+  
   function handleDetect(text) {
+    // PAUSE: QR — показать меню пауз для оператора
+    if (text.startsWith('PAUSE:')) {
+      const origQr = text.slice(6);
+      const task = [...tasksByQr.values()].find(t => t.qrText === origQr) ||
+                   tasks.find(t => t.qrText === origQr);
+      if (task) {
+        if (navigator.vibrate) navigator.vibrate([80]);
+        setPauseTask(task);
+        return;
+      }
+    }
+
+    // DONE: QR — показать информацию о закрытой операции
+    if (text.startsWith('DONE:')) {
+      const origQr = text.slice(5);
+      const task = [...tasksByQr.values()].find(t => t.qrText === origQr) ||
+                   tasks.find(t => t.qrText === origQr);
+      if (task) {
+        if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+        setDoneTaskInfo(task);
+        return;
+      }
+    }
     const task = tasksByQr.get(text) || null;
     setDetected({ qrText: text, task });
   }
@@ -115,7 +141,124 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
     setManualValue('');
   }
 
-  const detail = detected?.task ? data.details.find(d => d.id === detected.task.detailId) : null;
+  const detail = detected?.task ? (data?.details || []).find(d => d.id === detected.task.detailId) : null;
+
+
+  // Modal: пауза через QR код оператора
+  if (pauseTask) {
+    const pt = pauseTask;
+    const PAUSE_REASONS = [
+      { v: 'lunch',     l: '🍽 Обед',           color: '#e07b00' },
+      { v: 'break',     l: '☕ Перерыв',         color: '#666' },
+      { v: 'tech',      l: '📐 Технолог',        color: '#1a56db' },
+      { v: 'material',  l: '📦 Материал',        color: '#7e3af2' },
+      { v: 'equipment', l: '🔧 Поломка',         color: '#c00' },
+      { v: 'other',     l: '📝 Прочее',          color: '#888' },
+    ];
+    const isInProgress = pt.status === 'in_progress';
+    const isPaused     = pt.status === 'paused';
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '60vh', padding: 20, gap: 12 }}>
+        <div className="card" style={{ width: '100%', maxWidth: 400, padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ fontSize: 28 }}>{isPaused ? '▶' : '⏸'}</div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{isPaused ? 'Продолжить работу' : 'Поставить на паузу'}</div>
+              <div className="mono" style={{ fontSize: 11, color: 'var(--fg-2)' }}>
+                {String(pt.opNum).padStart(3, '0')} {pt.opName}
+              </div>
+            </div>
+          </div>
+
+          {isPaused ? (
+            <button className="btn primary" style={{ width: '100%', height: 48, fontSize: 15 }}
+              onClick={async () => {
+                try {
+                  await api.post('/tasks/' + pt.id + '/resume', {});
+                  if (navigator.vibrate) navigator.vibrate([100]);
+                  setPauseTask(null);
+                  lastScanRef.current = { text: '', at: 0 };
+                } catch(e) { alert('Ошибка: ' + e.message); }
+              }}>
+              ▶ Продолжить работу
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {PAUSE_REASONS.map(r => (
+                <button key={r.v} className="btn"
+                  style={{ width: '100%', height: 44, fontSize: 14, textAlign: 'left',
+                    borderLeft: '4px solid ' + r.color, paddingLeft: 14 }}
+                  onClick={async () => {
+                    try {
+                      await api.post('/tasks/' + pt.id + '/pause', { reason: r.v });
+                      if (navigator.vibrate) navigator.vibrate([50, 30, 80]);
+                      setPauseTask(null);
+                      lastScanRef.current = { text: '', at: 0 };
+                    } catch(e) { alert('Ошибка: ' + e.message); }
+                  }}>
+                  {r.l}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <button className="btn" style={{ width: '100%', maxWidth: 400 }}
+          onClick={() => { setPauseTask(null); lastScanRef.current = { text: '', at: 0 }; }}>
+          Отмена
+        </button>
+      </div>
+    );
+  }
+
+  // Modal: info about closed operation (DONE: QR scan)
+  if (doneTaskInfo) {
+    const t = doneTaskInfo;
+    const planTotal = t.time * t.planned;
+    const overdue = t.actualTime && t.actualTime > planTotal * 1.15;
+    return (
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        minHeight:'60vh', padding:24, gap:16 }}>
+        <div className="card" style={{ width:'100%', maxWidth:400, padding:24 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+            <div style={{ fontSize:28 }}>✅</div>
+            <div>
+              <div style={{ fontSize:15, fontWeight:700, color:'var(--st-done-line)' }}>Операция выполнена</div>
+              <div className="mono" style={{ fontSize:11, color:'var(--accent)' }}>{t.qrText}</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {[
+              ['Операция', String(t.opNum).padStart(3,'0') + ' ' + t.opName],
+              ['Рабочий центр', t.workCenter || '—'],
+              ['Оператор', t.operator || '—'],
+              ['Выполнено', t.completed + ' / ' + t.planned + ' шт'],
+              ['Норм. время', planTotal + '′'],
+              ['Факт. время', t.actualTime ? t.actualTime + '′' : '—'],
+            ].map(([k,v]) => (
+              <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:13,
+                padding:'5px 0', borderBottom:'1px solid var(--line-2)' }}>
+                <span style={{ color:'var(--fg-2)' }}>{k}</span>
+                <span style={{ fontWeight:500 }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, padding:'6px 0' }}>
+              <span style={{ color:'var(--fg-2)' }}>Нормоконтроль</span>
+              <span style={{ fontWeight:700, color: overdue ? 'var(--danger)' : 'var(--st-done-line)' }}>
+                {t.actualTime ? (overdue ? '⚠ Превышение +' + (t.actualTime - planTotal) + '′' : '✓ В норме') : '—'}
+              </span>
+            </div>
+          </div>
+        </div>
+        <button className="btn primary" onClick={() => setDoneTaskInfo(null)}
+          style={{ width:'100%', maxWidth:400, height:48 }}>
+          Закрыть
+        </button>
+      </div>
+    );
+  }
+
 
   return (
     <React.Fragment>
@@ -339,7 +482,7 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
 
 function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, onCancel, users }) {
   const S = useStrings(lang);
-  const [qty, setQty]           = React.useState(task.planned - task.completed);
+  const [qty, setQty]           = React.useState(task.planned); // Итоговое кол-во (не прирост!)
   const [operator, setOperator] = React.useState(task.operator || '');
   const [comment, setComment]   = React.useState('');
   const [closeStatus, setCloseStatus] = React.useState('done');
@@ -363,6 +506,7 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
         ? `Operation will be marked done (${qty}/${task.planned} pc) and logged.`
         : `Операция перейдёт в «Выполнена» (${qty}/${task.planned} шт.) и запишется в журнал.`);
 
+
   return (
     <div className="modal-back" onClick={onCancel}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ width:480 }}>
@@ -385,7 +529,14 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
           <div style={{ marginTop:18,display:'grid',gridTemplateColumns: isStart ? '1fr' : '1fr 1fr',gap:12 }}>
             {!isStart && (
               <div className="field">
-                <span className="field-label">{lang === 'en' ? 'Qty accepted' : 'Принято (шт.)'}</span>
+                <span className="field-label">
+                    {lang === 'en' ? 'Total qty done' : 'Итого сделано (шт.)'}
+                    {(task.completed||0) > 0 && (
+                      <span style={{fontSize:10,color:'var(--fg-2)',marginLeft:6}}>
+                        уже сдано: {task.completed}
+                      </span>
+                    )}
+                  </span>
                 <input className="input num" type="number" value={qty} min={0} max={task.planned}
                   onChange={e => setQty(parseInt(e.target.value)||0)}/>
               </div>

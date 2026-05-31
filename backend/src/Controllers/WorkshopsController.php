@@ -14,16 +14,11 @@ class WorkshopsController
     // GET /api/workshops
     public static function index(array $params): void
     {
-        $db = Connection::get();
+        $db   = Connection::get();
         $stmt = $db->query(
-            'SELECT w.*,
-                    COUNT(DISTINCT o.id)  AS orders_count,
-                    COUNT(DISTINCT t.id)  AS tasks_count,
-                    SUM(t.status = "in_progress") AS tasks_in_progress
+            'SELECT w.*
                FROM workshops w
-               LEFT JOIN orders o ON o.workshop_id = w.id AND o.status NOT IN ("done","cancelled")
-               LEFT JOIN tasks  t ON t.workshop_id = w.id
-              GROUP BY w.id
+              WHERE w.is_active = 1
               ORDER BY w.code'
         );
         json_out(['data' => $stmt->fetchAll()]);
@@ -220,7 +215,6 @@ class WorkshopsController
             'SELECT e.*, w.name AS workshop_name, w.code AS workshop_code
                FROM equipment e
                JOIN workshops w ON w.id = e.workshop_id
-              WHERE e.is_active = 1
               ORDER BY w.code, e.code'
         );
         json_out(['data' => $stmt->fetchAll()]);
