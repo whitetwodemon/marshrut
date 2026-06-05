@@ -24,6 +24,7 @@ const initialState = {
 
   // Смена
   activeShift: null,        // текущая открытая смена
+  settings:    {},            // системные настройки
 
   // UI состояние
   route:         'dashboard',
@@ -73,6 +74,9 @@ function reducer(state, action) {
 
     case 'SET_WORK_CENTERS':
       return { ...state, workCenters: action.payload };
+
+    case 'SET_SETTINGS':
+      return { ...state, settings: action.payload };
 
     case 'SET_ACTIVE_SHIFT':
       return { ...state, activeShift: action.payload };
@@ -172,6 +176,10 @@ export function AppProvider({ children }) {
 
       api.get('/shifts/active')
          .then(r => dispatch({ type: 'SET_ACTIVE_SHIFT', payload: r.shift || null }))
+         .catch(() => {});
+
+      api.get('/settings')
+         .then(r => dispatch({ type: 'SET_SETTINGS', payload: r.data || {} }))
          .catch(() => {});
 
       // Установить первый заказ активным если ничего не выбрано

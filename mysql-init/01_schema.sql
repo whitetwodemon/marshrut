@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS orders (
     order_type  CHAR(1)      NOT NULL DEFAULT 'W' COMMENT 'W=Заказ D=Доработка K=Кооперация',
     customer    VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     foreman     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-    status      ENUM('draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled') DEFAULT 'plan',
+    status      ENUM('draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled','shipped') DEFAULT 'plan',
     priority    ENUM('low','normal','high','urgent') DEFAULT 'normal',
     due_date    DATE         NULL,
     workshop_id INT          NULL,
@@ -225,4 +225,28 @@ CREATE TABLE IF NOT EXISTS shift_handoffs (
     handed_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_shift (shift_id),
     INDEX idx_task  (task_id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ── Системные настройки (ключ-значение) ────────────────────────────────
+CREATE TABLE IF NOT EXISTS system_settings (
+    key_name    VARCHAR(80)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    value       TEXT         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    description VARCHAR(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (key_name)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ── Журнал событий операторов ────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS shift_operator_log (
+    id          INT          AUTO_INCREMENT PRIMARY KEY,
+    shift_id    INT          NOT NULL,
+    operator    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    task_id     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    event       ENUM('start','close','pause_start','pause_end') NOT NULL,
+    work_center VARCHAR(20)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    qty         INT          DEFAULT 0,
+    note        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_shift_op (shift_id, operator),
+    INDEX idx_task     (task_id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

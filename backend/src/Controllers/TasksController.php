@@ -225,9 +225,13 @@ class TasksController
         $comment   = sanitize_string($body['comment']  ?? '', 500);
         $completed = isset($body['completed']) ? (int)$body['completed'] : (int)$task['planned'];
 
-        // Время текущей сессии
+        // Время текущей сессии:
+        // 1. Если оператор/мастер вводит вручную — берём из body
+        // 2. Иначе считаем из started_at
         $sessionMin = 0;
-        if (!empty($task['started_at'])) {
+        if (isset($body['actual_time_min']) && (int)$body['actual_time_min'] > 0) {
+            $sessionMin = (int)$body['actual_time_min'];
+        } elseif (!empty($task['started_at'])) {
             $sessionMin = max(0, (int)round((time() - strtotime($task['started_at'])) / 60));
         }
 

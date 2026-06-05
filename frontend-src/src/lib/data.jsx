@@ -400,10 +400,10 @@ function Sidebar({ route, setRoute, lang, counts, userRole }) {
   // Фильтруем пункты меню по роли пользователя
   // Элементы с полем roles показываются только указанным ролям
   const allItems = [
-    { id: 'dashboard',      label: S.navDash,          icon: 'gauge',   badge: counts.inProgress },
-    { id: 'orders',         label: S.navOrders,         icon: 'orders',  badge: counts.orders },
+    { id: 'dashboard',      label: 'Табло',            icon: 'gauge',   badge: counts.inProgress },
+    { id: 'work-centers',   label: 'Рабочие центры',    icon: 'building', badge: counts.inProgress },
+    { id: 'orders',         label: 'Редактор заказа',   icon: 'orders',  badge: counts.orders },
     { id: 'orders-list',    label: 'Все заказы',        icon: 'list' },
-    { id: 'work-centers',   label: 'Рабочие центры',    icon: 'building' },
     { id: 'library',        label: S.navLibrary,        icon: 'library' },
     { id: 'scanner',        label: S.navScan,           icon: 'scan' },
     { id: 'history',        label: S.navHistory,        icon: 'history' },

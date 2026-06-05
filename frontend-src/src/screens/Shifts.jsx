@@ -1,3 +1,4 @@
+import { elapsedMinutes } from '../lib/dates.js'
 import React from 'react'
 import { Icon } from '../components/Icon.jsx'
 import { api } from '../lib/api.js'
@@ -6,6 +7,17 @@ import { api } from '../lib/api.js'
 // ShiftBar — панель текущей смены (показывается вверху)
 // =======================================================
 export function ShiftBar({ shift, onOpen, onClose, onHandoff, tasks, authUser }) {
+  // Hooks MUST be before any conditional return (React rules)
+  const [elapsed, setElapsed] = React.useState(0);
+  React.useEffect(() => {
+    if (!shift?.opened_at) return;
+    const calc = () => setElapsed(elapsedMinutes(shift.opened_at));
+    calc();
+    const id = setInterval(calc, 60000);
+    return () => clearInterval(id);
+  }, [shift?.opened_at]);
+
+  // No shift open - show open button
   if (!shift) return (
     <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 16px',
       background:'var(--bg-2)', borderBottom:'1px solid var(--line-2)' }}>
@@ -15,17 +27,6 @@ export function ShiftBar({ shift, onOpen, onClose, onHandoff, tasks, authUser })
       </button>
     </div>
   );
-
-  const [elapsed, setElapsed] = React.useState(0);
-  React.useEffect(() => {
-    const calc = () => {
-      const normalized = shift.opened_at.includes('T') ? shift.opened_at : shift.opened_at.replace(' ', 'T') + 'Z';
-      setElapsed(Math.round((Date.now() - new Date(normalized).getTime()) / 60000));
-    };
-    calc();
-    const id = setInterval(calc, 60000);
-    return () => clearInterval(id);
-  }, [shift.opened_at]);
 
   const h = Math.floor(elapsed/60), m = elapsed%60;
   const isDay  = shift.name.toLowerCase().includes('дн') || shift.name.toLowerCase().includes('day');
@@ -142,7 +143,7 @@ export function ModalCloseShift({ shift, onClose, onClosed }) {
     setSaving(false);
   }
 
-  const dur = Math.round((Date.now() - new Date(shift.opened_at).getTime()) / 60000);
+  const dur = Math.round((Date.now() - new Date(shift.opened_at.replace(' ','T')+'Z').getTime()) / 60000);
 
   return (
     <div className="modal-back" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -363,8 +364,8 @@ export function ShiftsView({ authUser }) {
                 )}
                 {shifts.map(s => {
                   const dur = s.closed_at
-                    ? Math.round((new Date(s.closed_at) - new Date(s.opened_at)) / 60000)
-                    : Math.round((Date.now() - new Date(s.opened_at).getTime()) / 60000);
+                    ? Math.round((new Date(s.closed_at.replace(' ','T')+'Z') - new Date(s.opened_at.replace(' ','T')+'Z')) / 60000)
+                    : Math.round((Date.now() - new Date(s.opened_at.replace(' ','T')+'Z').getTime()) / 60000);
                   const isOpen = !s.closed_at;
                   return (
                     <tr key={s.id} className="row-hover" style={{ cursor:'pointer',
@@ -414,8 +415,8 @@ export function ShiftsView({ authUser }) {
 // =======================================================
 function ShiftReport({ report: r }) {
   const dur = r.closed_at
-    ? Math.round((new Date(r.closed_at) - new Date(r.opened_at)) / 60000)
-    : Math.round((Date.now() - new Date(r.opened_at).getTime()) / 60000);
+    ? Math.round((new Date(r.closed_at.replace(' ','T')+'Z') - new Date(r.opened_at.replace(' ','T')+'Z')) / 60000)
+    : Math.round((Date.now() - new Date(r.opened_at.replace(' ','T')+'Z').getTime()) / 60000);
 
   const totalClosed   = r.scans?.length || 0;
   const totalWorkMin  = Object.values(r.by_operator || {}).reduce((s, o) => s + (o.work_min || 0), 0);

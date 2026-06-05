@@ -205,16 +205,16 @@ function Library({ data, tasks, lang, onNewDetail, onEditDetail, onDeleteDetail,
   const [selectedId, setSelectedId] = React.useState(() => data.details[0]?.id || null);
   const [query, setQuery] = React.useState('');
 
-  const filtered = data.details.filter(d =>
+  const filtered = (data?.details||[]).filter(d =>
     d.name.toLowerCase().includes(query.toLowerCase()) ||
     d.code.toLowerCase().includes(query.toLowerCase())
   );
 
   // Если выбранная деталь удалена — переключаемся на первую доступную
-  const detail = data.details.find(d => d.id === selectedId) || data.details[0] || null;
+  const detail = (data?.details||[]).find(d => d.id === selectedId) || data.details[0] || null;
 
   React.useEffect(() => {
-    if (!data.details.find(d => d.id === selectedId) && data.details.length > 0) {
+    if (!(data?.details||[]).find(d => d.id === selectedId) && data.details.length > 0) {
       setSelectedId(data.details[0].id);
     }
   }, [data.details]);

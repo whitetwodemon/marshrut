@@ -82,7 +82,7 @@ class OrdersController
     public static function create(array $params): void
     {
         $body = request_body();
-        if ($err = validate($body, ['number', 'customer', 'due_date'])) {
+        if ($err = validate($body, ['number', 'due_date'])) {
             json_out(['error' => $err], 422);
         }
 
@@ -98,7 +98,7 @@ class OrdersController
             $id = self::generateId($db);
         }
 
-        $allowed_statuses = ['draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled'];
+        $allowed_statuses = ['draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled','shipped'];
         $status = in_array($body['status'] ?? 'draft', $allowed_statuses) ? ($body['status'] ?? 'draft') : 'draft';
 
         try {
@@ -140,14 +140,23 @@ class OrdersController
         $db   = Connection::get();
         $body = request_body();
 
-        if ($err = validate($body, ['number', 'customer', 'due_date'])) {
-            json_out(['error' => $err], 422);
-        }
+        $allowed_statuses = ['draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled','shipped'];
+        $allowed_priority = ['low', 'normal', 'high', 'urgent'];
 
-        $allowed_statuses = ['draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled'];
-        $allowed_priority = ['low', 'normal', 'high'];
-        $status   = in_array($body['status']   ?? 'plan', $allowed_statuses, true) ? $body['status']   : 'plan';
-        $priority = in_array($body['priority'] ?? 'normal', $allowed_priority, true) ? $body['priority'] : 'normal';
+        // Если передан только статус (например при отгрузке) — читаем текущие данные из БД
+        $existing = $db->prepare('SELECT * FROM orders WHERE id = :id');
+        $existing->execute([':id' => $params['id']]);
+        $current = $existing->fetch();
+        if (!$current) { json_out(['error' => 'Order not found'], 404); }
+
+        $number   = sanitize_string($body['number']   ?? $current['number'],   50);
+        $customer = sanitize_string($body['customer'] ?? $current['customer']  ?? '', 255);
+        $foreman  = sanitize_string($body['foreman']  ?? $current['foreman']   ?? '', 100) ?: null;
+        $dueDate  = $body['due_date'] ?? $current['due_date'];
+        $status   = in_array($body['status']   ?? $current['status'],   $allowed_statuses, true) ? ($body['status']   ?? $current['status'])   : $current['status'];
+        $priority = in_array($body['priority'] ?? $current['priority'], $allowed_priority, true) ? ($body['priority'] ?? $current['priority']) : $current['priority'];
+        $comment  = sanitize_string($body['comment'] ?? $current['comment'] ?? '', 1000) ?: null;
+        $wshop    = $body['workshop_id'] ?? $current['workshop_id'];
 
         try {
             $db->beginTransaction();
@@ -155,18 +164,18 @@ class OrdersController
             $db->prepare(
                 'UPDATE orders SET number=:number, customer=:customer, foreman=:foreman,
                                    workshop_id=:workshop_id, status=:status, priority=:priority,
-                                   due_date=:due_date, comment=:comment
+                                   due_date=:due_date, comment=:comment, updated_at=NOW()
                   WHERE id = :id'
             )->execute([
                 ':id'          => $params['id'],
-                ':number'      => sanitize_string($body['number'], 50),
-                ':customer'    => sanitize_string($body['customer'], 255),
-                ':foreman'     => sanitize_string($body['foreman'] ?? '', 100) ?: null,
-                ':workshop_id' => $body['workshop_id'] ?? null,
+                ':number'      => $number,
+                ':customer'    => $customer,
+                ':foreman'     => $foreman,
+                ':workshop_id' => $wshop,
                 ':status'      => $status,
                 ':priority'    => $priority,
-                ':due_date'    => $body['due_date'],
-                ':comment'     => sanitize_string($body['comment'] ?? '', 1000) ?: null,
+                ':due_date'    => $dueDate,
+                ':comment'     => $comment,
             ]);
 
             if (isset($body['items'])) {
@@ -330,7 +339,8 @@ class OrdersController
         $qi->execute([':oid' => $orderId, ':did' => $detId]);
         $qty = (int) ($qi->fetchColumn() ?: 1);
 
-        $taskId = "OT-{$orderNum}-{$detNum}-{$opNum}";
+        // Use timestamp to avoid ID collision on duplicate op_num
+        $taskId = "OT-" . substr($orderId, 0, 8) . "-" . $detNum . "-" . $opNum . "-" . substr(uniqid(), -4);
         $qr     = "OTASK:{$orderNum}-{$detNum}-{$opNum}";
 
         // Найти work_center_id если есть

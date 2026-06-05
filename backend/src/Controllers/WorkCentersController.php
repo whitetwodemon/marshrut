@@ -116,36 +116,53 @@ class WorkCentersController
     }
 
     // POST /api/orders/next-number — генерация следующего номера с префиксом типа
+    // Берёт реальный максимальный номер из таблицы orders для данного типа и года
     public static function nextOrderNumber(array $params): void
     {
         Auth::require();
         $db   = Connection::get();
         $body = request_body();
         $year = (int) date('y');
+        $yearStr = str_pad($year, 2, '0', STR_PAD_LEFT); // "26"
 
         $allowed = ['W', 'D', 'K'];
         $type    = strtoupper(trim($body['type'] ?? 'W'));
         if (!in_array($type, $allowed)) $type = 'W';
 
-        // Отдельная последовательность для каждого типа через составной ключ
-        $seqKey = $year * 10 + array_search($type, $allowed);
-
-        $db->beginTransaction();
         try {
-            $db->prepare(
-                'INSERT INTO order_sequences (year, seq) VALUES (:y, 1)
-                 ON DUPLICATE KEY UPDATE seq = seq + 1'
-            )->execute([':y' => $seqKey]);
+            // 1. Максимальный номер из реальных заказов этого типа/года
+            $maxFromOrders = 0;
+            try {
+                $maxStmt = $db->prepare(
+                    "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(number, '_', -1) AS UNSIGNED)), 0)
+                       FROM orders WHERE number LIKE :prefix"
+                );
+                $maxStmt->execute([':prefix' => $type . '_' . $yearStr . '_%']);
+                $maxFromOrders = (int)$maxStmt->fetchColumn();
+            } catch (\Exception $e) { /* таблица orders может быть пустой */ }
 
-            $row = $db->prepare('SELECT seq FROM order_sequences WHERE year = :y');
-            $row->execute([':y' => $seqKey]);
-            $seq = (int) $row->fetchColumn();
+            // 2. Значение из счётчика (может отсутствовать)
+            $seqKey       = $year * 10 + array_search($type, $allowed);
+            $seqFromTable = 0;
+            try {
+                $seqStmt = $db->prepare('SELECT COALESCE(seq,0) FROM order_sequences WHERE year = :y');
+                $seqStmt->execute([':y' => $seqKey]);
+                $seqFromTable = (int)($seqStmt->fetchColumn() ?: 0);
+            } catch (\Exception $e) { /* таблица order_sequences может не существовать */ }
 
-            $db->commit();
-            $number = $type . '_' . str_pad($year, 2, '0', STR_PAD_LEFT) . '_' . str_pad($seq, 6, '0', STR_PAD_LEFT);
+            $nextSeq = max($maxFromOrders, $seqFromTable) + 1;
+
+            // 3. Сохраняем счётчик (игнорируем если таблица не существует)
+            try {
+                $db->prepare(
+                    'INSERT INTO order_sequences (year, seq) VALUES (:y, :seq)
+                     ON DUPLICATE KEY UPDATE seq = GREATEST(seq, :seq2)'
+                )->execute([':y' => $seqKey, ':seq' => $nextSeq, ':seq2' => $nextSeq]);
+            } catch (\Exception $e) { /* игнорируем ошибку счётчика */ }
+
+            $number = $type . '_' . $yearStr . '_' . str_pad($nextSeq, 6, '0', STR_PAD_LEFT);
             json_out(['number' => $number, 'type' => $type]);
         } catch (\Exception $e) {
-            $db->rollBack();
             json_out(['error' => $e->getMessage()], 500);
         }
     }

@@ -466,7 +466,7 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
       {pendingClose && (
         <CloseOpModal
           task={pendingClose.task}
-          detail={data.details.find(d => d.id === pendingClose.task?.detailId)}
+          detail={(data?.details||[]).find(d => d.id === pendingClose.task?.detailId)}
           qrText={pendingClose.qrText}
           lang={lang}
           closing={closing}
@@ -482,10 +482,11 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
 
 function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, onCancel, users }) {
   const S = useStrings(lang);
-  const [qty, setQty]           = React.useState(task.planned); // Итоговое кол-во (не прирост!)
-  const [operator, setOperator] = React.useState(task.operator || '');
-  const [comment, setComment]   = React.useState('');
-  const [closeStatus, setCloseStatus] = React.useState('done');
+  const [qty,        setQty]        = React.useState(task.planned);
+  const [operator,   setOperator]   = React.useState(task.operator || '');
+  const [comment,    setComment]    = React.useState('');
+  const [closeStatus,setCloseStatus]= React.useState('done');
+  const [actualMin,  setActualMin]  = React.useState(''); // Фактическое время в минутах
   const isStart = action === 'start';
 
 
@@ -526,10 +527,20 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
               <div style={{ marginTop:4,fontSize:11,color:'var(--fg-2)' }}>{task.workCenter}</div>
             </div>
           </div>
-          <div style={{ marginTop:18,display:'grid',gridTemplateColumns: isStart ? '1fr' : '1fr 1fr',gap:12 }}>
+          <div style={{ marginTop:18, display:'grid', gridTemplateColumns: isStart ? '1fr' : '1fr 1fr', gap:12 }}>
             {!isStart && (
-              <div className="field">
-                <span className="field-label">
+              <>
+                <div className="field">
+                  <span className="field-label">
+                    {lang === 'en' ? 'Actual time (min)' : 'Факт. время (мин)'}
+                  </span>
+                  <input className="input" type="number" min="0"
+                    value={actualMin} onChange={e=>setActualMin(e.target.value)}
+                    placeholder={task.time ? String(task.time) : 'мин'}
+                    style={{ width:'100%' }}/>
+                </div>
+                <div className="field">
+                  <span className="field-label">
                     {lang === 'en' ? 'Total qty done' : 'Итого сделано (шт.)'}
                     {(task.completed||0) > 0 && (
                       <span style={{fontSize:10,color:'var(--fg-2)',marginLeft:6}}>
@@ -537,9 +548,10 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
                       </span>
                     )}
                   </span>
-                <input className="input num" type="number" value={qty} min={0} max={task.planned}
-                  onChange={e => setQty(parseInt(e.target.value)||0)}/>
-              </div>
+                  <input className="input num" type="number" value={qty} min={0} max={task.planned}
+                    onChange={e => setQty(parseInt(e.target.value)||0)}/>
+                </div>
+              </>
             )}
             <div className="field">
               <span className="field-label">{lang === 'en' ? 'Operator' : 'Исполнитель'}</span>
@@ -584,7 +596,7 @@ function CloseOpModal({ task, detail, qrText, lang, closing, action, onConfirm, 
           <button className="btn" onClick={onCancel} disabled={closing}>{S.cancel}</button>
           <button className="btn primary"
             style={ isStart ? { background:'#3b82f6',borderColor:'#3b82f6' } : {} }
-            onClick={() => onConfirm(qty, operator, action, comment, closeStatus)} disabled={closing}>
+            onClick={() => onConfirm(qty, operator, action, comment, closeStatus, actualMin ? Number(actualMin) : null)} disabled={closing}>
             <Icon name="check" size={14}/>{closing ? (lang==='en'?'Saving…':'Сохранение…') : confirmLabel}
           </button>
         </div>

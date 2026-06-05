@@ -12,12 +12,12 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
 
   // Re-sync если заказы обновились
   React.useEffect(() => {
-    if (!data.orders.find(o => o.id === activeId) && data.orders.length) {
+    if (!(data?.orders||[]).find(o => o.id === activeId) && data.orders.length) {
       setActiveId(data.orders[0].id);
     }
   }, [data.orders]);
 
-  const order = data.orders.find(o => o.id === activeId) || data.orders[0];
+  const order = (data?.orders||[]).find(o => o.id === activeId) || data.orders[0];
   if (!order) return (
     <div style={{ padding:24, textAlign:'center', color:'var(--fg-2)' }}>
       <p style={{ marginBottom:16 }}>{lang === 'en' ? 'No orders yet' : 'Нет заказов'}</p>
@@ -26,7 +26,7 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
   );
 
   const items = order.items.map(it => {
-    const det = data.details.find(d => d.id === it.detailId);
+    const det = (data?.details||[]).find(d => d.id === it.detailId);
     const itemTasks = tasks.filter(t => t.orderId === order.id && t.detailId === it.detailId);
     const done = itemTasks.filter(t => t.status === 'done').length;
     return { ...it, det, tasks: itemTasks, done, total: itemTasks.length };

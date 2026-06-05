@@ -29,7 +29,7 @@ function ExcelExportView({ data, tasks, scanLog }) {
       const tasksRows = [
         ['Заказ', 'Деталь', 'Код', '№ Оп.', 'Операция', 'РЦ', 'Кол.план', 'Кол.факт', 'Норм.вр', 'Факт вр', '% нормы', 'Оператор', 'Статус'],
         ...tasks.map(t => {
-          const order  = data.orders.find(o => o.id === t.orderId);
+          const order  = (data?.orders||[]).find(o => o.id === t.orderId);
           const detail = data.details?.find(d => d.id === t.detailId);
           const plan   = t.time * t.planned;
           const pct    = t.actualTime && plan > 0 ? Math.round(t.actualTime/plan*100)+'%' : '';
@@ -43,7 +43,7 @@ function ExcelExportView({ data, tasks, scanLog }) {
       const normRows = [
         ['Заказ', 'Деталь', 'Операция', 'РЦ', 'Норм. вр', 'Факт вр', '%', 'Откл.', 'Оператор'],
         ...tasks.filter(t => t.status==='done' && t.actualTime).map(t => {
-          const order  = data.orders.find(o => o.id === t.orderId);
+          const order  = (data?.orders||[]).find(o => o.id === t.orderId);
           const detail = data.details?.find(d => d.id === t.detailId);
           const plan   = t.time * t.planned;
           const delta  = t.actualTime - plan;
@@ -107,7 +107,7 @@ function ExcelExportView({ data, tasks, scanLog }) {
   }
 
   function exportRouteSheet(orderId) {
-    const order = data.orders.find(o => o.id === orderId);
+    const order = (data?.orders||[]).find(o => o.id === orderId);
     if (!order) return;
     setExporting('route_'+orderId);
     try {
@@ -161,7 +161,7 @@ function ExcelExportView({ data, tasks, scanLog }) {
         <table className="tbl">
           <thead><tr><th>Номер</th><th>Мастер</th><th className="hide-mobile">Срок</th><th className="num-col">Оп.</th><th className="num-col">Вып.</th><th/></tr></thead>
           <tbody>
-            {data.orders.map(o => {
+            {(data?.orders||[]).map(o => {
               const ot = tasks.filter(t=>t.orderId===o.id);
               return (
                 <tr key={o.id} className="row-hover">

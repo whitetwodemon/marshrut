@@ -7,7 +7,7 @@ import { api } from '../lib/api.js'
 function WorkCenterPreview({ items, data, lang }) {
   const wcMap = {};
   items.forEach(it => {
-    const det = data.details.find(d => d.id === it.detailId);
+    const det = (data?.details||[]).find(d => d.id === it.detailId);
     if (!det) return;
     det.operations.forEach(o => {
       const key = o.workCenter;
@@ -46,7 +46,7 @@ function RouteSheetView({ data, tasks, scanLog, lang, qrSize, onClose, onScanQR 
 
   const items = order.items.map(it => ({
     ...it,
-    det: data.details.find(d => d.id === it.detailId),
+    det: (data?.details||[]).find(d => d.id === it.detailId),
     tasks: tasks.filter(t => t.orderId === order.id && t.detailId === it.detailId),
   }));
 
@@ -69,7 +69,7 @@ function RouteSheetView({ data, tasks, scanLog, lang, qrSize, onClose, onScanQR 
         const pauseQrSVG  = pauseQrText ? (generateQrSvg(pauseQrText, 36) || '') : '';
 
         const rowBg = t.status === 'done' ? '#f0faf0' : t.status === 'in_progress' ? '#fff8f0' : '#fff';
-        const isDone = t.status === 'done';
+        const isDone = t.status === 'done' || t.completed >= t.planned;
 
         // Нормоконтроль для выполненных
         const normStr = isDone && t.actualTime
@@ -81,12 +81,13 @@ function RouteSheetView({ data, tasks, scanLog, lang, qrSize, onClose, onScanQR 
         // Дата закрытия из scan_log если есть
         const scanEntry = (scanLog||[]).find(s => s.qrText === t.qrText || s.taskId === t.id);
         const closedAt  = scanEntry?.ts || '';
+        const closedBy  = scanEntry?.operator || t.operator || '';
 
         return `<tr style="background:${rowBg};${isDone ? 'border-left:3px solid #2d7a2d' : ''}">
           <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-family:monospace;font-weight:700;font-size:9pt;width:30px;text-align:center">${String(t.opNum).padStart(3,'0')}</td>
           <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:9pt">
             <b>${t.opName}</b>
-            ${isDone ? `<div style="font-size:7pt;color:#2d7a2d;margin-top:2px">✓ ЗАКРЫТА</div>` : ''}
+            ${isDone ? `<div style="font-size:8pt;color:#fff;background:#2d7a2d;padding:1px 4px;border-radius:3px;margin-top:3px;display:inline-block;font-weight:700">✓ ЗАКРЫТА</div>` : ''}
             ${normStr}
           </td>
           <td style="padding:3px 6px;border-bottom:1px solid #e8e0d0;font-size:8pt;font-family:monospace;color:#444;width:90px">${t.workCenter}</td>

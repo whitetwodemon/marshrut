@@ -29,6 +29,7 @@ services:
       DB_PASSWORD:    ${DB_PASSWORD:-marshrut}
       JWT_SECRET:     ${JWT_SECRET:-change-me-in-production}
       CORS_ORIGIN:    ${CORS_ORIGIN:-*}
+      APP_TIMEZONE_OFFSET: ${APP_TIMEZONE_OFFSET:-+03:00}
       ADMIN_EMAIL:    ${ADMIN_EMAIL:-admin@marshrut.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
       ADMIN_NAME:     ${ADMIN_NAME:-Admin}

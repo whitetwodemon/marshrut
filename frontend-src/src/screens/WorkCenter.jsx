@@ -1,3 +1,4 @@
+import { elapsedMinutes } from '../lib/dates.js'
 import React from 'react'
 import { Icon } from '../components/Icon.jsx'
 import { QrCode, generateQrSvg } from '../components/QrCode.jsx'
@@ -109,11 +110,7 @@ function WorkCentersView({ tasks, data, workCenters, lang, onManage, onAction })
   }
 
   function getElapsed(startedAt) {
-    if (!startedAt) return 0;
-    // Normalize: "2026-05-28 18:30:00" → "2026-05-28T18:30:00Z" for correct UTC parsing
-    const normalized = startedAt.includes('T') ? startedAt : startedAt.replace(' ', 'T') + 'Z';
-    const ms = Date.now() - new Date(normalized).getTime();
-    return Math.max(0, Math.round(ms / 60000));
+    return elapsedMinutes(startedAt);
   }
 
   // Только первая незавершённая операция каждой детали
@@ -393,14 +390,22 @@ function WorkCentersView({ tasks, data, workCenters, lang, onManage, onAction })
                       {/* Кнопки */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 100 }}>
                         {t.status === 'waiting' && (
-                          <button className="btn primary" style={{ fontSize: 11, padding: '5px 10px' }}
-                            onClick={() => onAction && onAction('start', t)}>▶ Начать</button>
+                          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                            <button className="btn primary" style={{ fontSize: 11, padding: '5px 10px' }}
+                              onClick={() => onAction && onAction('start', t)}>▶ Начать</button>
+                            {t.operator && (
+                              <button className="btn ghost" style={{ fontSize: 11, padding: '3px 10px' }}
+                                onClick={() => onAction && onAction('transfer', t)}>→ Передать</button>
+                            )}
+                          </div>
                         )}
                         {t.status === 'in_progress' && (<>
                           <button className="btn primary" style={{ fontSize: 11, padding: '5px 10px', background: 'var(--st-done-line)', borderColor: 'var(--st-done-line)' }}
                             onClick={() => onAction && onAction('close', t)}>✓ Закрыть</button>
                           <button className="btn" style={{ fontSize: 11, padding: '4px 10px', color: 'var(--warning,#c07820)', borderColor: 'var(--warning,#c07820)' }}
                             onClick={() => onAction && onAction('pause', t)}>⏸ Пауза</button>
+                          <button className="btn ghost" style={{ fontSize: 11, padding: '4px 10px' }}
+                            onClick={() => onAction && onAction('transfer', t)}>→ Передать</button>
                         </>)}
                         {t.status === 'paused' && (
                           <button className="btn primary" style={{ fontSize: 11, padding: '5px 10px' }}
@@ -426,4 +431,93 @@ function WorkCentersView({ tasks, data, workCenters, lang, onManage, onAction })
 // ExcelExportView — выгрузки в Excel
 // =======================================================
 
-export { WorkCentersView, ModalManageWorkCenters }
+// ── ModalTransferTask — простая передача задания оператору ───────────────
+function ModalTransferTask({ task, data, onClose, onTransferred }) {
+  const order  = (data?.orders||[]).find(o => o.id === task.orderId);
+  const [toOp,   setToOp]   = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+
+  // Стандартные операторы (можно ввести вручную)
+  const COMMON_OPS = [
+    'Гаврилов А.Б.', 'Семёнов И.Н.', 'Орлов Д.С.',
+    'Маркина Е.В.', 'Колесников П.А.',
+  ];
+
+  async function handleTransfer() {
+    if (!toOp.trim()) return;
+    setSaving(true);
+    try {
+      // Просто меняем оператора и сбрасываем таймер
+      await api.patch('/tasks/' + task.id + '/status', {
+        status:   task.status === 'paused' ? 'paused' : 'waiting',
+        operator: toOp.trim(),
+      });
+      onTransferred();
+      onClose();
+    } catch(e) { alert('Ошибка: ' + e.message); }
+    setSaving(false);
+  }
+
+  return (
+    <div className="modal-back" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth:400 }}>
+        <div className="modal-head">
+          <b>Передать задание</b>
+          <button className="icon-btn" onClick={onClose}><Icon name="x" size={16}/></button>
+        </div>
+        <div className="modal-body" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {/* Инфо о задании */}
+          <div style={{ background:'var(--bg-2)', borderRadius:8, padding:12, fontSize:12 }}>
+            <div style={{ fontWeight:700, marginBottom:4 }}>
+              <span className="mono" style={{color:'var(--accent)',marginRight:8}}>
+                {String(task.opNum).padStart(3,'0')}
+              </span>
+              {task.opName}
+            </div>
+            <div style={{ color:'var(--fg-2)', display:'flex', gap:12 }}>
+              <span>РЦ: {task.workCenter}</span>
+              {order && <span>Заказ: {order.number}</span>}
+              <span>Сделано: {task.completed}/{task.planned} шт</span>
+            </div>
+            {task.operator && (
+              <div style={{ color:'var(--fg-2)', marginTop:4 }}>
+                Текущий: <b style={{color:'var(--fg-1)'}}>{task.operator}</b>
+              </div>
+            )}
+          </div>
+
+          {/* Выбор нового оператора */}
+          <div className="field">
+            <span className="field-label">Новый оператор</span>
+            <input className="input" value={toOp}
+              onChange={e => setToOp(e.target.value)}
+              placeholder="Введите имя…"
+              autoFocus />
+          </div>
+
+          {/* Быстрый выбор */}
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {COMMON_OPS.filter(op => op !== task.operator).map(op => (
+              <button key={op} className="btn ghost"
+                style={{ fontSize:11, padding:'4px 10px',
+                  background: toOp === op ? 'var(--accent)' : undefined,
+                  color: toOp === op ? '#fff' : undefined }}
+                onClick={() => setToOp(op)}>
+                {op}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>Отмена</button>
+          <button className="btn primary" onClick={handleTransfer}
+            disabled={saving || !toOp.trim()}>
+            {saving ? 'Передача…' : '→ Передать'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export { WorkCentersView, ModalManageWorkCenters, ModalTransferTask }

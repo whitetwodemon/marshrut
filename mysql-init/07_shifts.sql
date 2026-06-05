@@ -47,3 +47,27 @@ CREATE TABLE IF NOT EXISTS shift_operator_log (
     INDEX idx_task     (task_id),
     INDEX idx_created  (created_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ── Системные настройки (ключ-значение) ─────────────────────────────────
+CREATE TABLE IF NOT EXISTS system_settings (
+    key_name    VARCHAR(80)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    value       TEXT         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    description VARCHAR(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (key_name)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Настройки по умолчанию
+INSERT IGNORE INTO system_settings (key_name, value, description) VALUES
+('timezone',        'Europe/Moscow',   'Часовой пояс производства'),
+('timezone_offset', '+03:00',          'UTC смещение (+03:00 для МСК)'),
+('company_name',    'Маршрут МЭС',     'Название предприятия'),
+('shift_day_start', '08:00',           'Начало дневной смены'),
+('shift_day_end',   '20:00',           'Конец дневной смены (начало ночной)'),
+('shift_duration',  '720',             'Длительность смены в минутах (720=12ч)'),
+('norm_warn_pct',   '100',             'Порог предупреждения нормоконтроля (%)'),
+('norm_crit_pct',   '115',             'Критический порог нормоконтроля (%)'),
+('order_prefix_W',  'W',               'Префикс для обычных заказов'),
+('order_prefix_D',  'D',               'Префикс для доработок'),
+('order_prefix_K',  'K',               'Префикс для кооперации'),
+('max_login_attempts', '5',            'Максимум попыток входа в час');

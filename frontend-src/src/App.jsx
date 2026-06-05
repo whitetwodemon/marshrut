@@ -27,7 +27,7 @@ import { Dashboard }                              from './screens/Dashboard.jsx'
 import { Library }                                from './screens/Library.jsx'
 import { OrderBuilder }                           from './screens/OrderBuilder.jsx'
 import { RouteSheetView }                         from './screens/RouteSheet.jsx'
-import { WorkCentersView, ModalManageWorkCenters } from './screens/WorkCenter.jsx'
+import { WorkCentersView, ModalManageWorkCenters, ModalTransferTask } from './screens/WorkCenter.jsx'
 import { HistoryView, HistoryOrdersView }         from './screens/History.jsx'
 import { OrdersListView, ReportView }             from './screens/Reports.jsx'
 import { ShiftBar, ModalOpenShift, ModalCloseShift, ModalHandoff, ShiftsView } from './screens/Shifts.jsx'
@@ -168,7 +168,24 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
   const S = useStrings(tweaks.lang);
 
   // ── Хелперы навигации ──────────────────────────────────────────────────
-  const setRoute        = r  => dispatch({ type: 'SET_ROUTE',         payload: r });
+  // Hash-маршрутизация: #dashboard, #orders, #work-centers и т.д.
+  const setRoute = (r) => {
+    window.location.hash = r;
+    dispatch({ type: 'SET_ROUTE', payload: r });
+  };
+
+  // Синхронизация hash → route при загрузке и навигации назад/вперёд
+  React.useEffect(() => {
+    const onHash = () => {
+      const hash = window.location.hash.slice(1) || 'dashboard';
+      dispatch({ type: 'SET_ROUTE', payload: hash });
+    };
+    window.addEventListener('hashchange', onHash);
+    // Установить route из hash при первом рендере
+    const initial = window.location.hash.slice(1) || 'dashboard';
+    if (initial !== route) dispatch({ type: 'SET_ROUTE', payload: initial });
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []); // eslint-disable-line
   const setActiveOrder  = id => dispatch({ type: 'SET_ACTIVE_ORDER',  payload: id });
   const setModal        = m  => dispatch({ type: m ? 'OPEN_MODAL' : 'CLOSE_MODAL', payload: m });
   const setConfirmDlg   = d  => dispatch({ type: 'SET_CONFIRM_DLG',   payload: d });
@@ -227,6 +244,11 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
     document.documentElement.setAttribute('data-density', tweaks.density);
   }, [tweaks.theme, tweaks.density]);
 
+  // Admin panel as a full-screen route
+  if (route === '__admin') {
+    return <AdminPanel lang={tweaks.lang} onBack={() => setRoute('dashboard')} />;
+  }
+
   if (!data) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center',
       height:'100vh', color:'var(--fg-2)', fontSize:14 }}>
@@ -236,7 +258,7 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
 
   // ── Вычисляемые данные ─────────────────────────────────────────────────
   const activeOrder = activeOrderId
-    ? data.orders.find(o => o.id === activeOrderId) || data.orders[0]
+    ? (data?.orders||[]).find(o => o.id === activeOrderId) || data.orders[0]
     : data.orders[0];
   const activeData  = { ...data, orders: activeOrder ? [activeOrder] : [] };
   const counts      = {
@@ -286,6 +308,9 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
         openPauseModal(task.id);
       } else if (action === 'resume') {
         await resumeTask(task.id);
+      } else if (action === 'transfer') {
+        setModal({ type: 'transfer', task });
+        return; // не вызываем loadAll — modal сам обновит
       }
       await loadAll();
     } catch (e) {
@@ -363,7 +388,7 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
               </div>
 
               <OrderBuilder key={activeOrderId} data={activeData} tasks={tasks}
-                lang={tweaks.lang}
+                lang={tweaks.lang} workCenters={workCenters}
                 onRefresh={loadAll}
                 onPrint={() => setRoute('routesheet')}
                 onSave={async (updatedData) => {
@@ -371,7 +396,7 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
                     pushToast('Заказ сохранён'); await loadAll(); return;
                   }
                   try {
-                    const order = data.orders.find(o => o.id === activeOrderId);
+                    const order = (data?.orders||[]).find(o => o.id === activeOrderId);
                     if (!order) return;
                     await api.put('/orders/' + activeOrderId, {
                       number:   updatedData.number   || order.number,
@@ -552,14 +577,19 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
         <CloseOpModal task={modal.task} lang={tweaks.lang} users={[]}
           onClose={()  => setModal(null)}
           onCancel={() => setModal(null)}
-          onConfirm={async (qty, operator, action, comment, closeStatus) => {
+          onConfirm={async (qty, operator, action, comment, closeStatus, actualMin) => {
             try {
               await closeTask(modal.task.id, modal.task.qrText,
-                qty, operator, action, comment || '', closeStatus || 'done');
+                qty, operator, action, comment || '', closeStatus || 'done', actualMin);
               setModal(null);
               await loadAll(); // Полное обновление после закрытия операции
             } catch (e) { pushToast('Ошибка: ' + e.message); }
           }} />
+      )}
+      {modal?.type === 'transfer' && modal.task && (
+        <ModalTransferTask task={modal.task} data={data}
+          onClose={() => setModal(null)}
+          onTransferred={() => { setModal(null); loadAll(); pushToast('Задание передано'); }} />
       )}
       {modal?.type === 'pause' && (
         <ModalPause taskId={modal.taskId} reasons={modal.reasons}
@@ -572,12 +602,12 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
 
       {/* ── Модальные окна: заказы и детали ─────────────────────────── */}
       {modal === 'newOrder' && (
-        <ModalNewOrder lang={tweaks.lang} details={data.details} workshops={workCenters}
+        <ModalNewOrder lang={tweaks.lang} details={data?.details||[]} workshops={workCenters} appUsers={appUsers}
           onClose={() => setModal(null)}
           onCreated={() => { loadAll(); pushToast('Заказ создан'); }} />
       )}
       {modal === 'newDetail' && (
-        <ModalNewDetail lang={tweaks.lang}
+        <ModalNewDetail lang={tweaks.lang} workCenters={workCenters}
           onClose={() => setModal(null)}
           onCreated={() => { loadAll(); pushToast('Деталь добавлена'); }} />
       )}
@@ -727,7 +757,7 @@ function App() {
   );
 
   if (!authUser)  return <LoginScreen onLogin={handleLogin} />;
-  if (showAdmin)  return <AdminPanel lang={tweaks.lang} onBack={() => setShowAdmin(false)} />;
+  if (showAdmin) return <AdminPanel lang={tweaks.lang} onBack={() => { setShowAdmin(false); }} />;
 
   // Оборачиваем в провайдер стейта
   return (

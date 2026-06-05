@@ -5,10 +5,10 @@ import { QrCode, generateQrSvg } from '../components/QrCode.jsx'
 import { useStrings, StatusPill, OrderPicker } from '../lib/data.jsx'
 import { api } from '../lib/api.js'
 
-function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded }) {
-  const [expanded, setExpanded] = React.useState(false);
+function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded, workCenters }) {
+  const [expanded, setExpanded] = React.useState(true); // default expanded
   const [adding,   setAdding]   = React.useState(false);
-  const [form,     setForm]     = React.useState({ name:'', workCenter:'', time:'' });
+  const [form,     setForm]     = React.useState({ name:'', workCenter:'', time:'', opNum:'' });
   const [saving,   setSaving]   = React.useState(false);
 
   const ops = [...(det.operations||[])].sort((a,b) => a.num - b.num);
@@ -29,18 +29,19 @@ function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded }) {
     try {
       // Find max op_num for this detail in this order
       const maxNum = detTasks.reduce((m, t) => Math.max(m, t.opNum), 0);
-      const newNum = Math.ceil((maxNum + 10) / 10) * 10;
-      // Add task directly via API
+      const autoNum = Math.ceil((maxNum + 10) / 10) * 10;
+      const newNum  = form.opNum ? Number(form.opNum) : autoNum;
       await api.post('/orders/' + orderId + '/add-task', {
         detail_id: det.id,
-        op_num: newNum,
-        op_name: form.name,
+        op_num:    newNum,
+        op_name:   form.name,
         work_center: form.workCenter,
-        time_min: Number(form.time) || 0,
+        time_min:  Number(form.time) || 0,
       });
-      setForm({ name:'', workCenter:'', time:'' });
+      setForm({ name:'', workCenter:'', time:'', opNum:'' });
       setAdding(false);
-      onAdded && onAdded();
+      setExpanded(true); // stay expanded so user sees new operation
+      if (onAdded) await onAdded();
     } catch(e) { alert('Ошибка: ' + e.message); }
     setSaving(false);
   }
@@ -125,22 +126,25 @@ function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded }) {
   );
 }
 
-function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSelectOrder, activeOrderId, onRefresh }) {
+function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSelectOrder, activeOrderId, onRefresh, workCenters }) {
   const S = useStrings(lang);
-  const order = data.orders[0];
+  // Safe access: data or data.orders may be undefined during initial load
+  const order = (data?.orders||[])[0];
 
+  // Hooks MUST be before any conditional return (React rules)
+  const [items, setItems]       = React.useState(() => (order?.items||[]).map(it => ({ ...it })));
+  const [number]                = React.useState(order?.number   || '');
+  const [customer, setCustomer] = React.useState(order?.customer || '');
+  const [dueDate, setDueDate]   = React.useState(order?.dueDate  || '');
+  const [foreman, setForeman]   = React.useState(order?.foreman  || '');
+  const [adding, setAdding]     = React.useState(false);
+
+  // Guard AFTER all hooks
   if (!order) return (
     <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>
       <p style={{ marginBottom:16 }}>Нет активных заказов</p>
     </div>
   );
-
-  const [items, setItems] = React.useState(() => order.items.map(it => ({ ...it })));
-  const [number] = React.useState(order.number);
-  const [customer, setCustomer] = React.useState(order.customer);
-  const [dueDate, setDueDate] = React.useState(order.dueDate);
-  const [foreman, setForeman] = React.useState(order.foreman);
-  const [adding, setAdding] = React.useState(false);
 
   const updateQty = (idx, v) => {
     const next = [...items];
@@ -156,11 +160,11 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
 
   // Computed: total ops, total time
   const totalOps = items.reduce((s, it) => {
-    const det = data.details.find(d => d.id === it.detailId);
+    const det = (data?.details||[]).find(d => d.id === it.detailId);
     return s + (det ? (det.operations||[]).length : 0);
   }, 0);
   const totalTime = items.reduce((s, it) => {
-    const det = data.details.find(d => d.id === it.detailId);
+    const det = (data?.details||[]).find(d => d.id === it.detailId);
     if (!det) return s;
     return s + (det.operations||[]).reduce((ss, o) => ss + o.time, 0) * it.quantity;
   }, 0);
@@ -240,7 +244,7 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
             )}
 
             {items.map((it, idx) => {
-              const det = data.details.find(d => d.id === it.detailId);
+              const det = (data?.details||[]).find(d => d.id === it.detailId);
               if (!det) return null;
               return (
                 <div key={it.detailId} className="order-line">
@@ -250,7 +254,7 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
                       <span className="mono" style={{ color: 'var(--accent)' }}>{det.code}</span>
                       <span className="muted" style={{ marginLeft: 10 }}>{det.material}</span>
                     </div>
-                    <OrderItemOpsEditor det={det} orderId={order.id} tasks={tasks} lang={lang} onAdded={onRefresh}/>
+                    <OrderItemOpsEditor det={det} orderId={order.id} tasks={tasks} lang={lang} onAdded={onRefresh} workCenters={workCenters}/>
                   </div>
                   <div className="qty-stepper">
                     <button onClick={() => updateQty(idx, it.quantity - 1)}>−</button>
@@ -288,7 +292,7 @@ function OrderBuilder({ data, tasks, lang, onPrint, onSave, onDeleteOrder, onSel
               <div>
                 <div className="kpi-label">{S.totalOps}</div>
                 <div className="kpi-value num" style={{ fontSize: 22 }}>{items.reduce((s, it) => {
-                  const det = data.details.find(d => d.id === it.detailId);
+                  const det = (data?.details||[]).find(d => d.id === it.detailId);
                   return s + (det ? (det.operations||[]).length * it.quantity : 0);
                 }, 0)}</div>
               </div>

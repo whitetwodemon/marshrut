@@ -25,6 +25,7 @@ use Marshrut\Controllers\WorkCentersController;
 use Marshrut\Controllers\PausesController;
 use Marshrut\Controllers\ShiftsController;
 use Marshrut\Controllers\HealthController;
+use Marshrut\Controllers\SettingsController;
 
 Cors::handle();
 
@@ -107,6 +108,10 @@ $r->add('GET',    '/api/work-centers/{id}/order-priority', function($p) { Auth::
 $r->add('POST',   '/api/work-centers/{id}/order-priority', function($p) { Auth::can('orders.edit'); WorkCentersController::setPriority($p); });
 $r->add('GET',    '/api/work-centers/{id}/tasks', function($p) { Auth::require();       WorkCentersController::tasks($p); });
 $r->add('POST',   '/api/orders/next-number',   function($p) { Auth::require();          WorkCentersController::nextOrderNumber($p); });
+
+// Settings
+$r->add('GET',  '/api/settings',       function($p) { Auth::require();          SettingsController::index($p); });
+$r->add('POST', '/api/settings',       function($p) { Auth::can('settings.manage'); SettingsController::update($p); });
 
 // Healthcheck (без авторизации)
 $r->add('GET', '/api/health', function($p) { HealthController::check($p); });

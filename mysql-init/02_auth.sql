@@ -89,6 +89,7 @@ INSERT IGNORE INTO permissions (name, label, group_name) VALUES
 ('details.delete', 'Удаление деталей',          'details'),
 -- Сканер
 ('scanner.use',    'Использование сканера ОТК', 'scanner'),
+('settings.manage','Управление настройками', 'admin'),
 -- Журнал
 ('log.view',       'Просмотр журнала',          'log'),
 -- Пользователи

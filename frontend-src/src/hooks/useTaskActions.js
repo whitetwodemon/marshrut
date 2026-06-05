@@ -42,7 +42,7 @@ export function useTaskActions(pushToast, dispatch, tasks, authUser, onScanLogRe
    * @param {string} comment     - комментарий к закрытию
    * @param {string} closeStatus - итоговый статус задания ('done'|'rework'|'rejected')
    */
-  async function closeTask(taskId, qrText, qty, operator, action, comment, closeStatus) {
+  async function closeTask(taskId, qrText, qty, operator, action, comment, closeStatus, actualMin) {
     const task = tasks.find(t => t.id === taskId);
     const op   = resolveOperator(operator, task);
 
@@ -65,10 +65,11 @@ export function useTaskActions(pushToast, dispatch, tasks, authUser, onScanLogRe
         if (navigator.vibrate) navigator.vibrate([100]);
 
         await api.post('/tasks/' + taskId + '/close', {
-          operator:  op,
-          qr_text:   qrText,
-          completed: qty,
-          comment:   comment || undefined,
+          operator:       op,
+          qr_text:        qrText,
+          completed:      qty,
+          comment:        comment || undefined,
+          actual_time_min: actualMin || undefined,
         });
 
         // Если нужен нестандартный статус (брак, переделка) — обновляем отдельно

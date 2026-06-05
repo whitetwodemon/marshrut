@@ -157,8 +157,8 @@ function ShiftCard({ shift }) {
 
   // Длительность смены
   const dur = shift.closed_at
-    ? Math.round((new Date(shift.closed_at) - new Date(shift.opened_at)) / 60000)
-    : Math.round((Date.now() - new Date(shift.opened_at).getTime()) / 60000);
+    ? Math.round((new Date(shift.closed_at.replace(' ','T')+'Z') - new Date(shift.opened_at.replace(' ','T')+'Z')) / 60000)
+    : Math.round((Date.now() - new Date(shift.opened_at.replace(' ','T')+'Z').getTime()) / 60000);
 
   // Сумма по смене
   const totals = shift.operators.reduce((acc, s) => ({
