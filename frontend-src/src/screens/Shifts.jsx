@@ -178,9 +178,22 @@ export function ModalCloseShift({ shift, onClose, onClosed }) {
               placeholder="Итоги смены, замечания…" style={{ resize:'vertical' }}/>
           </div>
         </div>
+        {warning && (
+          <div style={{ padding:'12px 16px', background:'rgba(220,38,38,.08)',
+            borderTop:'1px solid var(--danger)', fontSize:12 }}>
+            <div style={{ color:'var(--danger)', fontWeight:700, marginBottom:6 }}>⚠ {warning}</div>
+            <div style={{ color:'var(--fg-1)', marginBottom:10 }}>
+              Закрыть принудительно? Операторы должны сами завершить работу.
+            </div>
+            <button className="btn" style={{ fontSize:12, color:'var(--danger)', borderColor:'var(--danger)' }}
+              onClick={() => handleClose(true)} disabled={saving}>
+              {saving ? '…' : 'Всё равно закрыть'}
+            </button>
+          </div>
+        )}
         <div className="modal-foot">
           <button className="btn" onClick={onClose}>Отмена</button>
-          <button className="btn primary" onClick={handleClose} disabled={saving}
+          <button className="btn primary" onClick={() => handleClose(false)} disabled={saving}
             style={{ background:'var(--danger)', borderColor:'var(--danger)' }}>
             {saving ? 'Закрытие…' : '■ Закрыть смену'}
           </button>
