@@ -296,7 +296,11 @@ class TasksController
             }
         }
 
-        // 4. Логируем событие в смену
+        // 4. Логируем в историю задания
+        self::logTaskEvent($db, $params['id'], 'close', $operator,
+            $comment ?: '', $completed, $sessionMin);
+
+        // 5. Логируем событие в смену
         try { self::logOperatorEvent($db, $params['id'], $operator, 'close', $task['work_center'] ?? '', $completed); }
         catch (\Exception $e) { /* смены может не быть — не критично */ }
 
@@ -325,4 +329,60 @@ class TasksController
 
         json_out($task);
     }
+    /** GET /api/tasks/{id}/events — история операции */
+    public static function events(array $params): void
+    {
+        $db   = Connection::get();
+        // Create table if not exists (migration safety)
+        $db->exec("CREATE TABLE IF NOT EXISTS task_events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            task_id VARCHAR(100) NOT NULL,
+            event_type ENUM('handoff','close','comment','start','pause') NOT NULL,
+            operator VARCHAR(100),
+            comment TEXT,
+            qty_done INT DEFAULT 0,
+            time_spent INT DEFAULT 0,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_task (task_id)
+        ) ENGINE=InnoDB CHARACTER SET utf8mb4");
+
+        $stmt = $db->prepare(
+            'SELECT * FROM task_events WHERE task_id = :id ORDER BY created_at ASC'
+        );
+        $stmt->execute([':id' => $params['id']]);
+        json_out(['data' => $stmt->fetchAll()]);
+    }
+
+    /** Записать событие в историю задания */
+    public static function logTaskEvent(
+        \PDO $db, string $taskId, string $type,
+        string $operator = '', string $comment = '',
+        int $qtyDone = 0, int $timeSpent = 0
+    ): void {
+        try {
+            $db->prepare(
+                'INSERT INTO task_events (task_id, event_type, operator, comment, qty_done, time_spent)
+                 VALUES (:tid, :type, :op, :comment, :qty, :time)'
+            )->execute([
+                ':tid'     => $taskId,
+                ':type'    => $type,
+                ':op'      => $operator ?: '',
+                ':comment' => $comment  ?: '',
+                ':qty'     => $qtyDone,
+                ':time'    => $timeSpent,
+            ]);
+        } catch (\Exception $e) { /* таблица может не существовать */ }
+    }
+
+    /** POST /api/tasks/{id}/comment — добавить комментарий/запись в историю */
+    public static function addComment(array $params): void
+    {
+        $db   = Connection::get();
+        $body = request_body();
+        $comment  = sanitize_string($body['comment']  ?? '', 1000);
+        $operator = sanitize_string($body['operator'] ?? '', 100);
+        self::logTaskEvent($db, $params['id'], 'comment', $operator, $comment);
+        json_out(['ok' => true]);
+    }
+
 }

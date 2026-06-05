@@ -250,3 +250,17 @@ CREATE TABLE IF NOT EXISTS shift_operator_log (
     INDEX idx_shift_op (shift_id, operator),
     INDEX idx_task     (task_id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ── История операций (передачи, комментарии мастера) ────────────────────
+CREATE TABLE IF NOT EXISTS task_events (
+    id          INT          AUTO_INCREMENT PRIMARY KEY,
+    task_id     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    event_type  ENUM('handoff','close','comment','start','pause') NOT NULL,
+    operator    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    comment     TEXT         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    qty_done    INT          DEFAULT 0,
+    time_spent  INT          DEFAULT 0,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_task (task_id),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

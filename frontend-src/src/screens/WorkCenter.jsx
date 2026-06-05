@@ -437,11 +437,11 @@ function WorkCentersView({ tasks, data, workCenters, lang, onManage, onAction })
 
 // ── ModalTransferTask — простая передача задания оператору ───────────────
 function ModalTransferTask({ task, data, onClose, onTransferred }) {
-  const order  = (data?.orders||[]).find(o => o.id === task.orderId);
+  const order   = (data?.orders||[]).find(o => o.id === task.orderId);
   const [toOp,   setToOp]   = React.useState('');
+  const [comment,setComment]= React.useState('');
   const [saving, setSaving] = React.useState(false);
 
-  // Стандартные операторы (можно ввести вручную)
   const COMMON_OPS = [
     'Гаврилов А.Б.', 'Семёнов И.Н.', 'Орлов Д.С.',
     'Маркина Е.В.', 'Колесников П.А.',
@@ -451,11 +451,17 @@ function ModalTransferTask({ task, data, onClose, onTransferred }) {
     if (!toOp.trim()) return;
     setSaving(true);
     try {
-      // Просто меняем оператора и сбрасываем таймер
       await api.patch('/tasks/' + task.id + '/status', {
         status:   task.status === 'paused' ? 'paused' : 'waiting',
         operator: toOp.trim(),
       });
+      // Логируем передачу в историю
+      if (comment.trim()) {
+        await api.post('/tasks/' + task.id + '/comment', {
+          comment: `Передано → ${toOp.trim()}: ${comment.trim()}`,
+          operator: task.operator || '',
+        }).catch(() => {});
+      }
       onTransferred();
       onClose();
     } catch(e) { console.error('Error:', e.message); }
@@ -510,6 +516,13 @@ function ModalTransferTask({ task, data, onClose, onTransferred }) {
                 {op}
               </button>
             ))}
+          </div>
+          {/* Комментарий к передаче */}
+          <div className="field">
+            <span className="field-label">Комментарий (необязательно)</span>
+            <textarea className="input" value={comment} onChange={e=>setComment(e.target.value)}
+              placeholder="Что сделано, что осталось, особые указания…"
+              rows={2} style={{ resize:'vertical', fontFamily:'var(--ui-font)', fontSize:12 }}/>
           </div>
         </div>
         <div className="modal-foot">

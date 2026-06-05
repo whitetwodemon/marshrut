@@ -130,16 +130,24 @@ export function ModalOpenShift({ onClose, onOpened }) {
 // ModalCloseShift — закрытие смены
 // =======================================================
 export function ModalCloseShift({ shift, onClose, onClosed }) {
-  const [notes, setNotes] = React.useState('');
-  const [saving, setSaving] = React.useState(false);
+  const [notes,   setNotes]   = React.useState('');
+  const [saving,  setSaving]  = React.useState(false);
+  const [warning, setWarning] = React.useState(''); // предупреждение об открытых заданиях
 
-  async function handleClose() {
+  async function handleClose(force = false) {
     setSaving(true);
     try {
-      await api.post('/shifts/' + shift.id + '/close', { notes });
+      await api.post('/shifts/' + shift.id + '/close', { notes, force });
       onClosed();
       onClose();
-    } catch(e) { console.error('Error:', e.message); }
+    } catch(e) {
+      // 422 с confirm_required — показываем предупреждение
+      if (e.status === 422 && e.message.includes('в работе')) {
+        setWarning(e.message);
+      } else {
+        console.error('Error:', e.message);
+      }
+    }
     setSaving(false);
   }
 

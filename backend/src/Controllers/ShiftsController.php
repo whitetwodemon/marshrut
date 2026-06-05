@@ -109,6 +109,21 @@ class ShiftsController
         $body = request_body();
         $db   = Connection::get();
 
+        // Проверяем — нет ли заданий "в работе" на рабочих центрах
+        $force = (bool)($body['force'] ?? false);
+        if (!$force) {
+            $inProgress = $db->query(
+                "SELECT COUNT(*) FROM tasks WHERE status = 'in_progress'"
+            )->fetchColumn();
+            if ($inProgress > 0) {
+                json_out([
+                    'error'        => "Нельзя закрыть смену: {$inProgress} задан(ие/ия) ещё в работе.",
+                    'in_progress'  => (int)$inProgress,
+                    'confirm_required' => true,
+                ], 422);
+            }
+        }
+
         $db->prepare(
             'UPDATE shifts SET closed_at=NOW(), closed_by=:uid, notes=:notes WHERE id=:id AND closed_at IS NULL'
         )->execute([

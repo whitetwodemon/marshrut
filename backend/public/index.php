@@ -78,6 +78,8 @@ $r->add('GET',   '/api/tasks',              function($p) { Auth::require();     
 $r->add('GET',   '/api/tasks/scan/{qr}',    function($p) { Auth::can('scanner.use'); TasksController::findByQr($p); });
 $r->add('GET',   '/api/tasks/{id}',         function($p) { Auth::require();           TasksController::show($p); });
 $r->add('PATCH', '/api/tasks/{id}/status',  function($p) { Auth::can('scanner.use'); TasksController::updateStatus($p); });
+$r->add('POST',  '/api/tasks/{id}/comment', function($p) { Auth::require(); TasksController::addComment($p); });
+$r->add('GET',   '/api/tasks/{id}/events',  function($p) { Auth::require(); TasksController::events($p); });
 $r->add('POST',  '/api/tasks/{id}/close',   function($p) { Auth::can('scanner.use'); TasksController::close($p); });
 
 // Scan log

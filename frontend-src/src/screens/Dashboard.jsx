@@ -8,19 +8,30 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
   const S = useStrings(lang);
   const [tab, setTab] = React.useState('board'); // 'board' | 'norm'
 
-  const [activeId, setActiveId] = React.useState((data?.orders||[])[0]?.id);
+  // На дашборде показываем только активные заказы (не выполненные и не отгруженные)
+  const activeOrders = React.useMemo(() =>
+    (data?.orders||[]).filter(o => !['done','cancelled','shipped'].includes(o.status)),
+  [data?.orders]);
+
+  const [activeId, setActiveId]   = React.useState((activeOrders)[0]?.id);
+  const [showDone, setShowDone]   = React.useState(false); // показать выполненные
 
   // Re-sync если заказы обновились
   React.useEffect(() => {
-    if (!(data?.orders||[]).find(o => o.id === activeId) && data.orders.length) {
-      setActiveId((data?.orders||[])[0].id);
+    if (!activeOrders.find(o => o.id === activeId) && activeOrders.length) {
+      setActiveId(activeOrders[0].id);
     }
   }, [data.orders]);
 
-  const order = (data?.orders||[]).find(o => o.id === activeId) || (data?.orders||[])[0];
+  const order = activeOrders.find(o => o.id === activeId) || activeOrders[0];
   if (!order) return (
     <div style={{ padding:24, textAlign:'center', color:'var(--fg-2)' }}>
-      <p style={{ marginBottom:16 }}>{lang === 'en' ? 'No orders yet' : 'Нет заказов'}</p>
+      <p style={{ marginBottom:16 }}>{lang === 'en' ? 'No active orders' : 'Нет активных заказов'}</p>
+      {(data?.orders||[]).filter(o=>['done','shipped'].includes(o.status)).length > 0 && (
+        <p style={{ fontSize:12, color:'var(--fg-2)', marginBottom:16 }}>
+          Выполненные заказы → раздел «История заказов»
+        </p>
+      )}
       <button className="btn primary" onClick={onNewOrder}><Icon name="plus" size={14}/>{lang === 'en' ? 'New order' : 'Создать заказ'}</button>
     </div>
   );
