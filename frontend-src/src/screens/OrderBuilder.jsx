@@ -11,16 +11,16 @@ function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded, workCenters })
   const [form,     setForm]     = React.useState({ name:'', workCenter:'', time:'', opNum:'' });
   const [saving,   setSaving]   = React.useState(false);
 
+  // detTasks MUST be declared before it is used
+  const detTasks = tasks.filter(t => t.orderId === orderId && t.detailId === det.id)
+                        .sort((a,b) => a.opNum - b.opNum);
+
   // Combine detail operations + tasks added manually to this order
-  const nomOps   = (det.operations||[]).map(o => ({ num: o.num, name: o.name, workCenter: o.workCenter, time: o.time }));
+  const nomOps      = (det.operations||[]).map(o => ({ num: o.num, name: o.name, workCenter: o.workCenter, time: o.time }));
   const taskOnlyOps = detTasks
     .filter(t => !nomOps.find(o => o.num === t.opNum))
     .map(t => ({ num: t.opNum, name: t.opName, workCenter: t.workCenter, time: t.time }));
   const ops = [...nomOps, ...taskOnlyOps].sort((a,b) => a.num - b.num);
-
-  // Задания этой детали в заказе
-  const detTasks = tasks.filter(t => t.orderId === orderId && t.detailId === det.id)
-                        .sort((a,b) => a.opNum - b.opNum);
 
   const STATUS_DOT = {
     waiting: '#888', in_progress: 'var(--accent)',
