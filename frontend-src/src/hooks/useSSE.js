@@ -88,7 +88,7 @@ export function useSSE(handlers, enabled = true) {
 
       /** Сервер просит переподключиться (например, при деплое) */
       es.addEventListener('reconnect', () => {
-        console.log('[SSE] Server requested reconnect');
+        // reconnect requested
         es.close();
         retryTimer = setTimeout(connect, 1000);
       });
@@ -99,7 +99,7 @@ export function useSSE(handlers, enabled = true) {
         if (destroyed) return;
 
         const delay = retryDelayRef.current;
-        console.log(`[SSE] Connection error, retrying in ${delay}ms`);
+        // retrying connection
         retryTimer = setTimeout(connect, delay);
 
         // Увеличиваем задержку для следующей попытки (но не больше MAX)

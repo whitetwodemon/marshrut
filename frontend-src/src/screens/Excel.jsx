@@ -17,7 +17,7 @@ function ExcelExportView({ data, tasks, scanLog }) {
       // Лист 1: Заказы
       const ordersRows = [
         ['Номер', 'Статус', 'Мастер', 'Назначение', 'Дата создания', 'Срок', 'Операций', 'Выполнено', '%'],
-        ...data.orders.map(o => {
+        ...(data?.orders||[]).map(o => {
           const ot   = tasks.filter(t => t.orderId === o.id);
           const done = ot.filter(t => t.status === 'done').length;
           return [o.number, STATUS[o.status]||o.status, o.foreman||'', o.customer||'', o.createdAt||'', o.dueDate||'', ot.length, done, ot.length>0?Math.round(done/ot.length*100)+'%':'0%'];

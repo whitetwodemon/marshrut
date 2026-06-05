@@ -180,7 +180,7 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
                   if (navigator.vibrate) navigator.vibrate([100]);
                   setPauseTask(null);
                   lastScanRef.current = { text: '', at: 0 };
-                } catch(e) { alert('Ошибка: ' + e.message); }
+                } catch(e) { console.error('Error:', e.message); }
               }}>
               ▶ Продолжить работу
             </button>
@@ -196,7 +196,7 @@ function Scanner({ data, tasks, scanLog, lang, qrSize, onScanResult, users }) {
                       if (navigator.vibrate) navigator.vibrate([50, 30, 80]);
                       setPauseTask(null);
                       lastScanRef.current = { text: '', at: 0 };
-                    } catch(e) { alert('Ошибка: ' + e.message); }
+                    } catch(e) { console.error('Error:', e.message); }
                   }}>
                   {r.l}
                 </button>

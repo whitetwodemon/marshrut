@@ -8,16 +8,16 @@ function Dashboard({ data, tasks, scanLog, lang, onScan, onCloseTask, onNewOrder
   const S = useStrings(lang);
   const [tab, setTab] = React.useState('board'); // 'board' | 'norm'
 
-  const [activeId, setActiveId] = React.useState(data.orders[0]?.id);
+  const [activeId, setActiveId] = React.useState((data?.orders||[])[0]?.id);
 
   // Re-sync если заказы обновились
   React.useEffect(() => {
     if (!(data?.orders||[]).find(o => o.id === activeId) && data.orders.length) {
-      setActiveId(data.orders[0].id);
+      setActiveId((data?.orders||[])[0].id);
     }
   }, [data.orders]);
 
-  const order = (data?.orders||[]).find(o => o.id === activeId) || data.orders[0];
+  const order = (data?.orders||[]).find(o => o.id === activeId) || (data?.orders||[])[0];
   if (!order) return (
     <div style={{ padding:24, textAlign:'center', color:'var(--fg-2)' }}>
       <p style={{ marginBottom:16 }}>{lang === 'en' ? 'No orders yet' : 'Нет заказов'}</p>

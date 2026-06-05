@@ -458,7 +458,7 @@ function ModalTransferTask({ task, data, onClose, onTransferred }) {
       });
       onTransferred();
       onClose();
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setSaving(false);
   }
 

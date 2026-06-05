@@ -82,7 +82,7 @@ function HistoryOrdersView({ data, tasks, lang, onOpenOrder }) {
     try {
       await api.put('/orders/' + orderId, { status: 'shipped' });
       setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, status:'shipped' } : o));
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setShipping(null);
   }
 

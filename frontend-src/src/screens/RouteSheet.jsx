@@ -35,7 +35,7 @@ function WorkCenterPreview({ items, data, lang }) {
 
 function RouteSheetView({ data, tasks, scanLog, lang, qrSize, onClose, onScanQR }) {
   const S = useStrings(lang);
-  const order = data.orders[0];
+  const order = (data?.orders||[])[0];
 
   if (!order) return (
     <div style={{ padding:48, textAlign:'center', color:'var(--fg-2)' }}>

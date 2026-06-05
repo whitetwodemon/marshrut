@@ -350,7 +350,7 @@ function ReportView({ data, tasks, scanLog, lang, onOpenDashboard }) {
   // Excel-экспорт отчёта
   function exportExcel() {
     const XLSX = window.XLSX;
-    if (!XLSX) { alert('SheetJS не загружен'); return; }
+    if (!XLSX) { console.error('SheetJS не загружен'); return; }
     const today = new Date().toISOString().slice(0,10);
 
     // Лист 1: Сводка по заказам

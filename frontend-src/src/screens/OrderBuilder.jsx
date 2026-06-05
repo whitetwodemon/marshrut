@@ -42,7 +42,7 @@ function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded, workCenters })
       setAdding(false);
       setExpanded(true); // stay expanded so user sees new operation
       if (onAdded) await onAdded();
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setSaving(false);
   }
 

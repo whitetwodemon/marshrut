@@ -848,7 +848,7 @@ function ModalPause({ taskId, reasons, onClose, onSaved }) {
       await api.post('/tasks/' + taskId + '/pause', { reason, note: note || undefined });
       await onSaved?.();
       onClose();
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setSaving(false);
   }
 

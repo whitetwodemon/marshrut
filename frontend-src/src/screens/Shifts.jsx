@@ -84,7 +84,7 @@ export function ModalOpenShift({ onClose, onOpened }) {
       const res = await api.post('/shifts/open', { name });
       onOpened(res);
       onClose();
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setSaving(false);
   }
 
@@ -139,7 +139,7 @@ export function ModalCloseShift({ shift, onClose, onClosed }) {
       await api.post('/shifts/' + shift.id + '/close', { notes });
       onClosed();
       onClose();
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setSaving(false);
   }
 
@@ -219,7 +219,7 @@ export function ModalHandoff({ shift, tasks, data, onClose, onHandedOff }) {
       });
       onHandedOff();
       onClose();
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setSaving(false);
   }
 
@@ -331,7 +331,7 @@ export function ShiftsView({ authUser }) {
     try {
       const r = await api.get('/shifts/' + id + '/report');
       setReport(r.shift);
-    } catch(e) { alert('Ошибка: ' + e.message); }
+    } catch(e) { console.error('Error:', e.message); }
     setLoading(false);
   }
 

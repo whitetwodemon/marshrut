@@ -260,7 +260,7 @@ class TasksController
         // DEBUG: проверяем что UPDATE сработал
         $check = $db->prepare('SELECT status, completed FROM tasks WHERE id = :id');
         $check->execute([':id' => $params['id']]);
-        $after = $check->fetch();
+        $after = $check->fetch() ?: ['status' => 'unknown', 'completed' => 0];
         \Marshrut\app_log('info', 'task.close.after_update', [
             'task_id'   => $params['id'],
             'new_status'=> $after['status'] ?? 'not found',
