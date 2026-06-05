@@ -248,7 +248,7 @@ function ModalNewOrder({ lang, details, workshops, onClose, onCreated, appUsers 
               </select>
             </div>
             <div className="field">
-              <span className="field-label">Номер</span>
+              <span className="field-label">Номер (авто)</span>
               <input className="input mono" value={number} readOnly
                 style={{ color:'var(--accent)', fontWeight:700, cursor:'not-allowed', opacity:.8 }}/>
             </div>
@@ -468,8 +468,8 @@ function AdminPanel({ lang, onBack }) {
     const [company,     setCompany]= React.useState(settings.company_name?.value    || '');
     const [warnPct,     setWarnPct]= React.useState(settings.norm_warn_pct?.value   || '100');
     const [critPct,     setCritPct]= React.useState(settings.norm_crit_pct?.value   || '115');
-    const [dayStart,    setDayStart]= React.useState(settings.shift_day_start?.value || '08:00');
-    const [dayEnd,      setDayEnd]  = React.useState(settings.shift_day_end?.value   || '20:00');
+    const [dayStart,    setDayStart]= React.useState(settings.shift_day_start?.value || '07:00');
+    const [dayEnd,      setDayEnd]  = React.useState(settings.shift_day_end?.value   || '19:00');
     const [maxLogin,    setMaxLogin]= React.useState(settings.max_login_attempts?.value || '5');
     const [saving,      setSaving]  = React.useState(false);
 

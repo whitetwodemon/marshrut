@@ -199,12 +199,16 @@ function WorkCentersView({ tasks, data, workCenters, lang, onManage, onAction })
 
   // Inline timer
   function TaskTimer({ t }) {
-    const planMin     = t.time * t.planned;               // норматив
-    const accMin      = t.accumulatedTime || 0;           // время предыдущих операторов
+    const planMin     = t.time * t.planned;               // полный норматив
+    const accMin      = t.accumulatedTime || 0;           // накопленное время предыдущих операторов
     const sessionMin  = t.status === 'in_progress' && t.startedAt
-      ? getElapsed(t.startedAt) + (tick * 0) : 0;        // время текущего оператора
-    const totalMin    = accMin + sessionMin;              // итого потрачено
-    const remainMin   = Math.max(0, planMin - accMin);    // осталось (норматив минус накоп.)
+      ? getElapsed(t.startedAt) + (tick * 0) : 0;        // время текущей сессии
+    const totalMin    = accMin + sessionMin;
+
+    // Оставшееся время = норматив на оставшиеся детали (с учётом уже сделанных)
+    const remaining   = Math.max(0, t.planned - (t.completed || 0)); // осталось деталей
+    const normPerPart = t.planned > 0 ? t.time : 0;                  // норматив на 1 деталь
+    const remainMin   = Math.max(0, remaining * normPerPart - accMin); // норматив минус накоп.
     const over        = totalMin > planMin && totalMin > 0;
     const pct         = planMin > 0 ? Math.min(100, Math.round(totalMin / planMin * 100)) : 0;
     const color       = over ? 'var(--danger)' : pct > 85 ? 'var(--warning,#c07820)' : 'var(--accent)';

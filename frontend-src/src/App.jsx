@@ -342,7 +342,7 @@ function AppInner({ authUser, onLogout, tweaks, setTweak }) {
               <Icon name="chart" size={14}/>{S.navReport || 'Отчёт'}
             </button>
             {Auth.isAdmin() && (
-              <button className="btn" onClick={() => dispatch({ type: 'SET_ROUTE', payload: '__admin' })}>
+              <button className="btn" onClick={() => setRoute('__admin')}>
                 <Icon name="cog" size={14}/>Админ
               </button>
             )}

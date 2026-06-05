@@ -133,13 +133,25 @@ class WorkCentersController
             // 1. Максимальный номер из реальных заказов этого типа/года
             $maxFromOrders = 0;
             try {
+                // Ищем максимум среди ВСЕХ заказов данного типа за текущий год
                 $maxStmt = $db->prepare(
                     "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(number, '_', -1) AS UNSIGNED)), 0)
-                       FROM orders WHERE number LIKE :prefix"
+                       FROM orders
+                      WHERE number REGEXP :pattern"
                 );
-                $maxStmt->execute([':prefix' => $type . '_' . $yearStr . '_%']);
+                $maxStmt->execute([':pattern' => '^' . $type . '_' . $yearStr . '_[0-9]+$']);
                 $maxFromOrders = (int)$maxStmt->fetchColumn();
-            } catch (\Exception $e) { /* таблица orders может быть пустой */ }
+            } catch (\Exception $e) {
+                // Fallback: простой LIKE
+                try {
+                    $maxStmt = $db->prepare(
+                        "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(number, '_', -1) AS UNSIGNED)), 0)
+                           FROM orders WHERE number LIKE :prefix"
+                    );
+                    $maxStmt->execute([':prefix' => $type . '_' . $yearStr . '_%']);
+                    $maxFromOrders = (int)$maxStmt->fetchColumn();
+                } catch (\Exception $e2) { /* пустая таблица */ }
+            }
 
             // 2. Значение из счётчика (может отсутствовать)
             $seqKey       = $year * 10 + array_search($type, $allowed);

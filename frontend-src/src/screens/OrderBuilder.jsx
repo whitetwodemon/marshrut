@@ -103,23 +103,54 @@ function OrderItemOpsEditor({ det, orderId, tasks, lang, onAdded, workCenters })
       })}
 
       {adding && (
-        <div style={{ display:'flex', gap:6, padding:'8px 10px', background:'rgba(217,72,15,.06)',
-          borderTop:'1px solid var(--accent)', flexWrap:'wrap', alignItems:'center' }}>
-          <input className="input" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))}
-            placeholder="Название операции" style={{ flex:2, minWidth:120 }} autoFocus/>
-          <input className="input" value={form.workCenter} onChange={e=>setForm(p=>({...p,workCenter:e.target.value}))}
-            placeholder="Код РЦ (101, 710…)" list="wc-list" style={{ flex:1, minWidth:70 }}/>
-          <input className="input" type="number" value={form.time} onChange={e=>setForm(p=>({...p,time:e.target.value}))}
-            placeholder="мин" style={{ width:60 }}/>
-          <button className="btn primary" onClick={addOp} disabled={saving} style={{ fontSize:12 }}>
-            {saving ? '…' : 'Добавить'}
-          </button>
-          <button className="icon-btn" onClick={()=>setAdding(false)}><Icon name="x" size={14}/></button>
-          <datalist id="wc-list">
-            {[101,104,120,124,128,129,136,301,710,711,720,721,722,731,901,1101].map(c=>(
-              <option key={c} value={String(c)}/>
-            ))}
-          </datalist>
+        <div style={{ padding:'10px 12px', background:'rgba(217,72,15,.06)',
+          borderTop:'1px solid var(--accent)' }}>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'flex-end' }}>
+            {/* Номер операции */}
+            <div className="field" style={{ width:70 }}>
+              <span className="field-label">№ оп.</span>
+              <input className="input" type="number" value={form.opNum}
+                onChange={e=>setForm(p=>({...p,opNum:e.target.value}))}
+                placeholder="авто" style={{ textAlign:'center' }}/>
+            </div>
+            {/* Название */}
+            <div className="field" style={{ flex:3, minWidth:120 }}>
+              <span className="field-label">Операция *</span>
+              <input className="input" value={form.name} autoFocus
+                onChange={e=>setForm(p=>({...p,name:e.target.value}))}
+                onKeyDown={e=>e.key==='Enter'&&addOp()}
+                placeholder="Токарная, Фрезерная…"/>
+            </div>
+            {/* РЦ */}
+            <div className="field" style={{ flex:2, minWidth:130 }}>
+              <span className="field-label">Рабочий центр *</span>
+              <select className="select" value={form.workCenter}
+                onChange={e=>setForm(p=>({...p,workCenter:e.target.value}))}>
+                <option value="">Выбрать…</option>
+                {(workCenters||[]).map(w=>(
+                  <option key={w.id||w.code} value={w.code}>{w.code} — {w.name}</option>
+                ))}
+              </select>
+            </div>
+            {/* Норматив */}
+            <div className="field" style={{ width:75 }}>
+              <span className="field-label">Мин.</span>
+              <input className="input" type="number" min="0" value={form.time}
+                onChange={e=>setForm(p=>({...p,time:e.target.value}))}
+                onKeyDown={e=>e.key==='Enter'&&addOp()}
+                placeholder="0"/>
+            </div>
+            <button className="btn primary" onClick={addOp}
+              disabled={saving||!form.name||!form.workCenter} style={{ fontSize:12, height:32 }}>
+              {saving ? '…' : '+ Добавить'}
+            </button>
+            <button className="icon-btn" onClick={()=>{setAdding(false);setForm({name:'',workCenter:'',time:'',opNum:''})}}>
+              <Icon name="x" size={14}/>
+            </button>
+          </div>
+          <div style={{ fontSize:10, color:'var(--fg-2)', marginTop:6 }}>
+            № пустой = автоматический (макс + 10). Укажи вручную для добавочных (41, 42…)
+          </div>
         </div>
       )}
     </div>

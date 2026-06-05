@@ -70,11 +70,11 @@ export function ModalOpenShift({ onClose, onOpened }) {
   const today = new Date().toLocaleDateString('ru-RU');
   const hour  = new Date().getHours();
   const PRESETS = [
-    { label: '☀️ Дневная смена',  name: 'Дневная смена ' + today,  desc: '08:00 – 20:00 · 12 часов' },
-    { label: '🌙 Ночная смена',   name: 'Ночная смена '  + today,  desc: '20:00 – 08:00 · 12 часов' },
+    { label: '☀️ Дневная смена',  name: 'Дневная смена ' + today,  desc: '07:00 – 19:00 · 12 часов' },
+    { label: '🌙 Ночная смена',   name: 'Ночная смена '  + today,  desc: '19:00 – 07:00 · 12 часов' },
   ];
   const [name, setName] = React.useState(
-    hour >= 8 && hour < 20 ? PRESETS[0].name : PRESETS[1].name
+    hour >= 7 && hour < 19 ? PRESETS[0].name : PRESETS[1].name
   );
   const [saving, setSaving] = React.useState(false);
 
