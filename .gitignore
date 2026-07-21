@@ -1,7 +1,0 @@
-certs/
-backups/
-frontend-src/node_modules/
-frontend-src/src/blocks/
-backend/vendor/
-.env
-*.zip

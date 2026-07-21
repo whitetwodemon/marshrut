@@ -1,0 +1,1 @@
+ALTER TABLE shift_operator_log MODIFY COLUMN event VARCHAR(30) NOT NULL;

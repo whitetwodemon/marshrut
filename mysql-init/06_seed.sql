@@ -130,3 +130,36 @@ INSERT IGNORE INTO users (name, email, password_hash, role_id, is_active) VALUES
 ('Семёнов И.Н.',       'operator2@marshrut.local', '$2y$10$TKh8H1.PfwT6+LHuIHnVzuWQKXhlb4YoYEVBBNWzMsWQGkHrYV3Gy', 3, 1),
 ('Орлов Д.С.',         'operator3@marshrut.local', '$2y$10$TKh8H1.PfwT6+LHuIHnVzuWQKXhlb4YoYEVBBNWzMsWQGkHrYV3Gy', 3, 1),
 ('Наблюдатель',        'viewer@marshrut.local',    '$2y$10$TKh8H1.PfwT6+LHuIHnVzuWQKXhlb4YoYEVBBNWzMsWQGkHrYV3Gy', 4, 1);
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- Тестовые данные под новые функции (v3.2): статусы, спецификация-дерево,
+-- уведомления. Только для test-домена.
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- Заказы с новыми статусами (Проблема / Отгружен / Архив)
+INSERT IGNORE INTO orders (id, number, customer, foreman, status, priority, due_date, created_at, problem_comment) VALUES
+('O-003', 'W_26_000003', 'АО «Насосмаш»',   'Колесников П.А.', 'problem',  'urgent', '2026-06-20', '2026-05-25', 'Нет материала: сталь 40Х не поступила на склад'),
+('O-004', 'W_26_000004', 'ООО «Редуктор»',  'Петров В.С.',     'shipped',  'normal', '2026-06-05', '2026-05-10', NULL),
+('O-005', 'W_26_000005', 'ПАО «Компрессор»','Колесников П.А.', 'archived', 'low',    '2026-05-01', '2026-04-15', NULL);
+
+INSERT IGNORE INTO order_items (order_id, detail_id, quantity) VALUES
+('O-003', 'D-002', 4),
+('O-004', 'D-001', 2),
+('O-005', 'D-003', 1);
+
+-- Спецификация-дерево: изделие с деталями + сборочная единица
+INSERT IGNORE INTO specifications (id, number, name, customer, manager, status, due_date) VALUES
+('SP-001', 'СП_26_0001', 'Насосный агрегат НА-120', 'АО «Насосмаш»', 'Колесников П.А.', 'in_production', '2026-07-15');
+
+-- Дерево: корневая деталь + сборочная единица с вложенными деталями
+INSERT IGNORE INTO specification_items (id, spec_id, parent_id, node_type, detail_id, detail_name, detail_code, quantity, nomenclature_ready) VALUES
+(101, 'SP-001', NULL, 'detail',   'D-001', 'Фланец воротниковый ДУ-100', 'ФЛ-100-08', 2, 1),
+(102, 'SP-001', NULL, 'assembly', NULL,    'Узел привода',                NULL,        1, 0),
+(103, 'SP-001', 102,  'detail',   'D-002', 'Вал шлицевой Z=8',           'ВЛ-45-220', 1, 1),
+(104, 'SP-001', 102,  'detail',   'D-004', 'Крышка ведущего вала',       'КВ-80-01',  2, 1);
+
+-- Стартовые уведомления
+INSERT IGNORE INTO notifications (target_role, type, title, body, order_id, created_at) VALUES
+('foreman',  'problem',      'Проблема по заказу O-003', 'Нет материала: сталь 40Х не поступила на склад', 'O-003', '2026-05-25 09:15:00'),
+('foreman',  'order_done',   'Заказ O-004 выполнен',     NULL,                                             'O-004', '2026-06-04 16:40:00'),
+('operator', 'order_in_work','Новый заказ в работе: O-001','Появились задания на постах',                  'O-001', '2026-05-14 08:00:00');

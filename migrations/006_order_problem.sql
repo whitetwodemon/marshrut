@@ -1,0 +1,2 @@
+ALTER TABLE orders MODIFY COLUMN status VARCHAR(30) NOT NULL DEFAULT 'plan';
+ALTER TABLE orders ADD COLUMN problem_comment TEXT NULL;

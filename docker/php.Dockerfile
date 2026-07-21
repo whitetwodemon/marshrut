@@ -17,10 +17,16 @@ RUN { \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/api
-COPY backend/composer.json ./
+
+# Сначала только composer.json для кэширования зависимостей
+COPY composer.json ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
-COPY backend/ .
-COPY migrations/ /var/www/migrations/
+
+# Копируем исходники (всё в корне, не в backend/)
+COPY src/        ./src/
+COPY public/     ./public/
+COPY scripts/    ./scripts/
+COPY migrations/ ./migrations/
 
 COPY docker/php-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

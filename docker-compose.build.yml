@@ -1,0 +1,23 @@
+# ═══════════════════════════════════════════════════════════════
+# docker-compose.build.yml — сборка ОБЩИХ образов (один раз)
+#
+# Использование:
+#   cd app && docker compose -f docker-compose.build.yml build
+#
+# Создаёт два образа, которые потом использует каждый инстанс:
+#   • marshrut-mes-app:latest    (PHP backend + frontend)
+#   • marshrut-mes-mysql:latest  (MySQL со схемой)
+# ═══════════════════════════════════════════════════════════════
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+    image: marshrut-mes-app:latest
+
+  mysql:
+    build:
+      context: .
+      dockerfile: docker/mysql.Dockerfile
+    image: marshrut-mes-mysql:latest

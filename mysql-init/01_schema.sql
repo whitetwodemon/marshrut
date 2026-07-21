@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS operations (
     work_center VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     work_center_id INT       NULL,
     time_min    INT          DEFAULT 0,
+    setup_time_min INT       NOT NULL DEFAULT 0 COMMENT 'ТПЗ — время наладки (мин)',
+    comment     VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'Примечание к операции',
+    requires_cnc TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Операция требует УП для ЧПУ',
     UNIQUE KEY uq_detail_num (detail_id, num),
     INDEX idx_detail (detail_id)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -38,11 +41,12 @@ CREATE TABLE IF NOT EXISTS orders (
     order_type  CHAR(1)      NOT NULL DEFAULT 'W' COMMENT 'W=Заказ D=Доработка K=Кооперация',
     customer    VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     foreman     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-    status      ENUM('draft','plan','waiting_material','waiting_equipment','waiting_approval','in_work','paused','done','cancelled','shipped') DEFAULT 'plan',
+    status      VARCHAR(30)  NOT NULL DEFAULT 'plan' COMMENT 'draft/plan/waiting_*/in_work/paused/done/cancelled/problem/shipped/archived',
     priority    ENUM('low','normal','high','urgent') DEFAULT 'normal',
     due_date    DATE         NULL,
     workshop_id INT          NULL,
     comment     TEXT         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    problem_comment TEXT     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'Причина статуса Проблема',
     created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -75,12 +79,18 @@ CREATE TABLE IF NOT EXISTS tasks (
     started_at      TIMESTAMP    NULL,
     actual_time_min  INT         NULL,
     accumulated_time INT         NOT NULL DEFAULT 0 COMMENT 'Накопленное время всех операторов (мин)',
+    setup_time_min   INT         NOT NULL DEFAULT 0 COMMENT 'ТПЗ — норматив наладки (мин)',
+    setup_started_at TIMESTAMP   NULL COMMENT 'Начало наладки',
+    setup_actual_min INT         NULL COMMENT 'Факт наладки (мин)',
+    setup_done       TINYINT     NOT NULL DEFAULT 0 COMMENT 'Наладка завершена',
+    queue_pos        INT         NOT NULL DEFAULT 0 COMMENT 'Приоритет в очереди РЦ',
     qr_text         VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     workshop_id     INT          NULL,
     updated_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_order  (order_id),
     INDEX idx_wc     (work_center_id),
+    INDEX idx_wc_text (work_center),
     INDEX idx_status (status)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -209,6 +219,8 @@ CREATE TABLE IF NOT EXISTS shifts (
     opened_by  INT          NOT NULL REFERENCES users(id),
     closed_by  INT          NULL REFERENCES users(id),
     notes      TEXT         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    shift_type VARCHAR(10)  NOT NULL DEFAULT 'day',
+    handoff_to VARCHAR(100) NULL,
     INDEX idx_open (closed_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -242,7 +254,7 @@ CREATE TABLE IF NOT EXISTS shift_operator_log (
     shift_id    INT          NOT NULL,
     operator    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     task_id     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-    event       ENUM('start','close','pause_start','pause_end') NOT NULL,
+    event       VARCHAR(30)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     work_center VARCHAR(20)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     qty         INT          DEFAULT 0,
     note        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -264,3 +276,53 @@ CREATE TABLE IF NOT EXISTS task_events (
     INDEX idx_task (task_id),
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Модуль Техподготовка ЧПУ + склад
+-- Модуль «Техподготовка ЧПУ» + склад инструмента и материалов
+
+CREATE TABLE IF NOT EXISTS detail_files (
+  id           VARCHAR(36) PRIMARY KEY,
+  detail_id    VARCHAR(36) NOT NULL,
+  op_num       INT NULL COMMENT 'NULL = файл детали (чертёж/модель), иначе привязка к операции',
+  file_type    VARCHAR(20) NOT NULL COMMENT 'drawing | nc_program | setup_sheet | model',
+  filename     VARCHAR(255) NOT NULL,
+  stored_name  VARCHAR(64)  NOT NULL,
+  size_bytes   INT NOT NULL DEFAULT 0,
+  version      INT NOT NULL DEFAULT 1,
+  uploaded_by  VARCHAR(36) NULL,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_df_detail (detail_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+CREATE TABLE IF NOT EXISTS tools (
+  id        VARCHAR(36) PRIMARY KEY,
+  name      VARCHAR(200) NOT NULL COMMENT 'Фреза концевая 10мм Z4',
+  tool_type VARCHAR(40)  NOT NULL DEFAULT 'other' COMMENT 'mill|drill|tap|turn_insert|bore|reamer|other',
+  size_info VARCHAR(80)  NULL COMMENT 'Ø10, М8, CNMG 120408…',
+  qty       INT NOT NULL DEFAULT 0,
+  min_qty   INT NOT NULL DEFAULT 0,
+  location  VARCHAR(80)  NULL COMMENT 'Шкаф 2, ячейка B3',
+  comment   VARCHAR(300) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS materials_stock (
+  id        VARCHAR(36) PRIMARY KEY,
+  material  VARCHAR(120) NOT NULL COMMENT 'Сталь 45',
+  assortment VARCHAR(120) NULL COMMENT 'Круг Ø60, лист 10мм…',
+  qty       DECIMAL(10,2) NOT NULL DEFAULT 0,
+  unit      VARCHAR(20) NOT NULL DEFAULT 'кг',
+  min_qty   DECIMAL(10,2) NOT NULL DEFAULT 0,
+  location  VARCHAR(80) NULL,
+  comment   VARCHAR(300) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO system_settings (key_name, value, description) VALUES
+('feature_tech_prep', '0', 'Модуль «Техподготовка ЧПУ + склад» (0=выкл, включается в админке)');

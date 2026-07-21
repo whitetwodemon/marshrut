@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS shifts (
     opened_by  INT          NOT NULL,
     closed_by  INT          NULL,
     notes      TEXT         CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    shift_type VARCHAR(10)  NOT NULL DEFAULT 'day',
+    handoff_to VARCHAR(100) NULL,
     INDEX idx_open (closed_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -38,7 +40,7 @@ CREATE TABLE IF NOT EXISTS shift_operator_log (
     shift_id    INT          NOT NULL,
     operator    VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     task_id     VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-    event       ENUM('start','close','pause_start','pause_end') NOT NULL,
+    event       VARCHAR(30)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
     work_center VARCHAR(20)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
     qty         INT          DEFAULT 0,
     note        VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -70,4 +72,8 @@ INSERT IGNORE INTO system_settings (key_name, value, description) VALUES
 ('order_prefix_W',  'W',               'Префикс для обычных заказов'),
 ('order_prefix_D',  'D',               'Префикс для доработок'),
 ('order_prefix_K',  'K',               'Префикс для кооперации'),
-('max_login_attempts', '5',            'Максимум попыток входа в час');
+('max_login_attempts', '5',            'Максимум попыток входа в час'),
+('feature_analytics', '0',              'Расширенная аналитика (0=выкл, разблокируется в админке)'),
+('feature_1c',        '0',              'Интеграция с 1С (0=выкл, разблокируется в админке)'),
+('feature_tech_prep','0','Модуль «Техподготовка ЧПУ + склад» (0=выкл)'),
+('materials_list',    'Сталь 45,Сталь 40Х,Сталь 20,Сталь 3,Ст3сп,09Г2С,Чугун СЧ20,Чугун ВЧ50,Нержавейка 12Х18Н10Т,Латунь ЛС59-1,Бронза БрАЖ9-4,Алюминий Д16Т,Алюминий АК6,Титан ВТ6,Капролон,Фторопласт Ф4', 'Список материалов для номенклатуры (через запятую, управляется в админке)');

@@ -95,7 +95,11 @@ INSERT IGNORE INTO permissions (name, label, group_name) VALUES
 -- Пользователи
 ('users.view',     'Просмотр пользователей',    'admin'),
 ('users.manage',   'Управление пользователями', 'admin'),
-('roles.manage',   'Управление ролями',         'admin');
+('roles.manage',   'Управление ролями',         'admin'),
+-- Техподготовка ЧПУ
+('tech.manage',    'Управление техподготовкой (УП, чертежи)', 'tech'),
+-- Склад инструмента и материалов
+('warehouse.manage','Управление складом (инструмент, материалы)', 'warehouse');
 
 -- -------------------------------------------------------
 -- Seed: role_permissions
